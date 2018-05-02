@@ -227,6 +227,28 @@ function selected( $string, $param = 1, $type = 'select' )
                                             数组操作
  */
 /** fengkui.net
+ * [strsToArray 字符串转数组]
+ * @param  [type] $strs [传入数组]
+ * @return [type]       [description]
+ * transform ' hello, world !' to array('hello', 'world')
+ */
+function strsToArray($strs) { 
+    $result = array(); 
+    $array = array(); 
+    $strs = str_replace('，', ',', $strs); 
+    $strs = str_replace("n", ',', $strs); 
+    $strs = str_replace("rn", ',', $strs); 
+    $strs = str_replace(' ', ',', $strs); 
+    $array = explode(',', $strs); 
+    foreach ($array as $key => $value) {
+        if ('' != ($value = trim($value))) { 
+            $result[] = $value; 
+        } 
+    }
+    return $result; 
+} 
+
+/** fengkui.net
  * [convert_arr_key 将数据库中查出的列表以指定的 id 作为数组的键名 ]
  * @param  [type] $arr      [数组]
  * @param  [type] $key_name [ID]
