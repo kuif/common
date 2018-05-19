@@ -81,6 +81,28 @@ function check_mobile($mobile)
     return false;
 }
 
+/**
+ * [check_chinese 汉字检测]
+ * @param  [type] $chinese [description]
+ * @return [type]          [description]
+ */
+function check_chinese($chinese){
+    if(preg_match('/^[\x7f-\xff]+$/',$chinese))
+        return true;
+    return false;
+}
+
+/**
+ * [check_number 正整数检查]
+ * @param  [type] $num [description]
+ * @return [type]      [description]
+ */
+function check_number($num){
+    if(preg_match("/^\+?[1-9][0-9]*$/",$num))
+        return true;
+    return false;
+}
+
 /** fengkui.net
  * [check_email 检查邮箱地址格式]
  * @param  [type] $email [邮箱地址]
