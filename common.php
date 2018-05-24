@@ -1682,16 +1682,21 @@ function app_upload_image($path,$maxSize=52428800)
     $path=trim($path,'/');
     $config=array(
         'rootPath'  =>'./',         //文件上传保存的根路径
-        'savePath'  =>'./'.$path.'/',   
+        'savePath'  =>'./'.$path.'/',
         'exts'      => array('jpg', 'gif', 'png', 'jpeg','bmp'),
         'maxSize'   => $maxSize,
         'autoSub'   => true,
         );
     $upload = new \Think\Upload($config);// 实例化上传类
     $info = $upload->upload();
+
     if($info) {
         foreach ($info as $k => $v) {
-            $data[]=trim($v['savepath'],'.').$v['savename'];
+            $name = $v['savepath'].$v['savename'];
+            $image = new \Think\Image();
+            $image->open("$name");
+            $image->thumb(800, 800)->save("$name"); //图片压缩替换
+            $data[]=trim($v['savepath'],'.').$v['savename']; //存入数组中返回
         }
         return $data;
     }
