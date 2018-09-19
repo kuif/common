@@ -76,14 +76,14 @@ function serverIP()
  */
 function check_mobile($mobile)
 {
-    if(preg_match('/1[34578]\d{9}$/',$mobile))
+    if(preg_match('/^1[34578]\d{9}$/',$mobile))
         return true;
     return false;
 }
 
-/**
+/** fengkui.net
  * [check_chinese 汉字检测]
- * @param  [type] $chinese [description]
+ * @param  [type] $chinese [汉字]
  * @return [type]          [description]
  */
 function check_chinese($chinese){
@@ -92,7 +92,7 @@ function check_chinese($chinese){
     return false;
 }
 
-/**
+/** fengkui.net
  * [check_number 正整数检查]
  * @param  [type] $num [description]
  * @return [type]      [description]
@@ -113,6 +113,64 @@ function check_email($email)
     if(filter_var($email,FILTER_VALIDATE_EMAIL))
         return true;
     return false;
+}
+
+/** fengkui.net
+ * [check_username 判断用户名是否合法 只能以数字、字母、中文、下划线构成，并且不能以数字开头]
+ * @param  [type]  $username [用户名]
+ * @param  integer $length   [用户名最大长度]
+ * @return [type]            [description]
+ */
+function check_username($username, $length=20)
+{
+    // 不能以数字下划线开头
+    if (preg_match("/^[0-9_]/u", $username)) {
+        return false;
+    }
+    if (! preg_match("/^[\x{4e00}-\x{9fa5}\w]{3,$length}$/u", $username)) {
+         return false;
+    }
+ 
+    return true;
+}
+
+/** fengkui.net
+ * [is_string_regular 用正则匹配字符串中的特殊字符]
+ * @param  [type]  $str [要匹配的任何数据]
+ * @return boolean      [description]
+ */
+function is_string_regular($str) {
+    $pregs = '/select|insert|update|CR|document|LF|eval|delete|script|alert|\ |\'|\/\*|\#|\--|\ --|\/|\*|\-|\+|\=|\~|\*@|\*!|\$|\%|\^|\&|\(|\)|\/|\/\/|\.\.\/|\.\/|union|into|load_file|outfile/';
+    if(is_array($str)){
+
+        if(TestArray($str) == 1){
+            //一维数组
+            foreach($str as $k=>$v){
+                //遍历
+                $check= preg_match($pregs,$v);
+                if($check == 1)
+                    return false;
+                return true;
+            }
+        }else if(TestArray($str) == 2){
+            //二维数组
+            foreach($str as $k=>$v){
+                foreach($v as $ks=>$vs){
+                    //遍历
+                    $check= preg_match($pregs,$v);
+                    if($check == 1)
+                        return false;
+                    return true;
+                }
+            }
+        }
+    }else if(is_string($str)){
+        //字符串
+        $check= preg_match($pregs,$str);
+        if($check == 1)
+            return false;
+        return true;
+    }
 }
 
 /** fengkui.net
@@ -248,6 +306,7 @@ function selected( $string, $param = 1, $type = 'select' )
 /** fengkui.net
                                             数组操作
  */
+
 /** fengkui.net
  * [strsToArray 字符串转数组]
  * @param  [type] $strs [传入数组]
@@ -1662,6 +1721,30 @@ function word_time($time)
         $str = date('Y-m-d H:i:s', $time);
     }
     return $str;
+}
+
+/** fengkui.net
+ * [time2second 时间计算]
+ * @param  [type] $seconds [description]
+ * @return [type]          [description]
+ */
+function time2second($seconds){
+    $seconds = (int)$seconds;
+    if( $seconds>3600 ){
+        if( $seconds>24*3600 ){
+            $days       = (int)($seconds/86400);
+            $days_num   = $days."天";
+            $seconds    = $seconds%86400;//取余
+        }
+        $hours = intval($seconds/3600);
+        $minutes = $seconds%3600;//取余下秒数
+        $time = $days_num.$hours."小时".gmstrftime('%M分钟%S秒', $minutes);
+    } elseif ( $seconds>60 ) {
+        $time = gmstrftime('%M分钟%S秒', $seconds);
+    } else{
+        $time = gmstrftime('%S秒', $seconds);
+    }
+    return $time;
 }
 
 /** fengkui.net
