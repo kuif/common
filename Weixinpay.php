@@ -3,9 +3,9 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2018-12-15T16:47:40+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2018-12-27T13:46:50+08:00
+ * @Last Modified time: 2019-02-26T14:17:55+08:00
  */
-
+namespace feng;
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
@@ -18,6 +18,7 @@ class Weixinpay {
     private $sslkey_path = './cert/apiclient_key.pem'; // 证书（退款时使用）
     private $config=array(
         'APPID'              => '', // 微信支付APPID
+        'XCXAPPID'           => '', // 微信小程序APPID
         'MCHID'              => '', // 微信支付MCHID 商户收款账号
         'KEY'                => '', // 微信支付KEY
         'APPSECRET'          => '', // 公众帐号secert
@@ -41,17 +42,17 @@ class Weixinpay {
      *      'total_fee'     => '', // 订单金额（分）
      *      'out_trade_no'  => '', // 订单编号
      *      'product_id'    => '', // 产品id
-     *      'trade_type'    => '', // 类型：JSAPI，NATIVE，APP
+     *      'trade_type'    => '', // 类型：JSAPI--JSAPI支付（或小程序支付）、NATIVE--Native支付、APP--app支付，MWEB--H5支付
      * );
      */
     public function unifiedOrder($order){
         // 获取配置项
         $weixinpay_config=$this->config;
         $config=array(
-            'appid'             => isset($order['openid']) ? $weixinpay_config['XCXAPPID'] : $weixinpay_config['APPID'],
+            'appid'             => (empty($weixinpay_config['APPID']) || $order['trade_type']=='JSAPI') ? $weixinpay_config['XCXAPPID'] : $weixinpay_config['APPID'],
             'mch_id'            => $weixinpay_config['MCHID'],
             'nonce_str'         => 'test',
-            'spbill_create_ip'  => getIP(),
+            'spbill_create_ip'  => self::getIP(),
             'notify_url'        => $weixinpay_config['NOTIFY_URL']
             );
         // 合并配置数据和订单数据
@@ -117,7 +118,7 @@ class Weixinpay {
         $data['sign']=$sign;
         $xml=$this->toXml($data);
         $url = 'https://api.mch.weixin.qq.com/secapi/pay/refund';//接收xml数据的文件
-        $response = $this->postXmlSSLCurl($xml,$url);
+        $response = self::postXmlSSLCurl($xml,$url);
         $result=$this->toArray($response);
         // 显示错误信息
         if ($result['return_code']=='FAIL') {
@@ -257,11 +258,11 @@ class Weixinpay {
             $time=time();
             // 组合jssdk需要用到的数据
             $data=array(
-                'appId'=>$config['APPID'], //appid
-                'timeStamp'=>strval($time), //时间戳
-                'nonceStr'=>$unified_order['nonce_str'],// 随机字符串
-                'package'=>'prepay_id='.$unified_order['prepay_id'],// 预支付交易会话标识
-                'signType'=>'MD5'//加密方式
+                'appId'     => $config['APPID'], //appid
+                'timeStamp' => strval($time), //时间戳
+                'nonceStr'  => $unified_order['nonce_str'],// 随机字符串
+                'package'   => 'prepay_id='.$unified_order['prepay_id'],// 预支付交易会话标识
+                'signType'  => 'MD5'//加密方式
             );
             // 生成签名
             $data['paySign']=$this->makeSign($data);
@@ -308,7 +309,7 @@ class Weixinpay {
      * @param  integer $second [description]
      * @return [type]          [description]
      */
-    function postXmlSSLCurl($xml,$url,$second=30)
+    public function postXmlSSLCurl($xml,$url,$second=30)
     {
         $ch = curl_init();
         //超时时间
@@ -345,6 +346,26 @@ class Weixinpay {
             curl_close($ch);
             return false;
         }
+    }
+
+    /** fengkui.net
+     * [getIP 定义一个函数getIP() 客户端IP]
+     * @return [type] [description]
+     */
+    public function getIP()
+    {
+        if (getenv("HTTP_CLIENT_IP"))
+            $ip = getenv("HTTP_CLIENT_IP");
+        else if(getenv("HTTP_X_FORWARDED_FOR"))
+            $ip = getenv("HTTP_X_FORWARDED_FOR");
+        else if(getenv("REMOTE_ADDR"))
+            $ip = getenv("REMOTE_ADDR");
+        else $ip = "Unknow";
+
+        if(preg_match('/^((?:(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(?:25[0-5]|2[0-4]\d|((1\d{2})|([1 -9]?\d))))$/', $ip))
+            return $ip;
+        else
+            return '';
     }
 
 
