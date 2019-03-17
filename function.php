@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-02-26T14:21:19+08:00
+ * @Last Modified time: 2019-03-17T10:13:09+08:00
  */
 if (!function_exists('result')) {
     /**
@@ -25,6 +25,8 @@ if (!function_exists('result')) {
     }
 }
 
+/**    文件及文件夹处理      **/
+
 if (!function_exists('write_in_txt')) {
     /**
      * [read_txt 日志写入文档]
@@ -34,6 +36,37 @@ if (!function_exists('write_in_txt')) {
     {
         $newLog ='log_time:'.date('Y-m-d H:i:s').'       '.json_encode($data);
         file_put_contents("./log.txt", $newLog.PHP_EOL, FILE_APPEND);
+    }
+}
+
+if (!function_exists('del_file')) {
+    /**
+     * [del_file 删除文件及文件夹]
+     * @param  [type]  $path [所在路径]
+     * @param  boolean $type [是否删除当前目录文件]
+     * @return [type]        [description]
+     */
+    function del_file($path, $type=false){
+        // 先处理路径 去掉./后再次添加
+        $path = './'.trim(trim($path,'.'),'/').'/';
+        if(is_dir($path)){ //如果是目录则继续
+            //扫描一个文件夹内的所有文件夹和文件并返回数组
+            $files = scandir($path);
+            foreach($files as $filename){
+                if($filename !="." && $filename !=".."){
+                    //如果是目录则递归子目录，继续操作
+                    if(is_dir($path.$filename)){
+                        del_file($path.$filename.'/'); //子目录中操作删除文件夹和文件
+                        @rmdir($path.$filename.'/'); //目录清空后删除空文件夹
+                    }else{
+                        unlink($path.$filename); //如果是文件直接删除
+                    }
+                }
+            }
+        }
+        if ($type) { // 判断是否删除当前空文件夹
+            @rmdir($path);
+        }
     }
 }
 
