@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-03-17T10:13:09+08:00
+ * @Last Modified time: 2019-03-17T10:14:32+08:00
  */
 if (!function_exists('result')) {
     /**
@@ -36,6 +36,28 @@ if (!function_exists('write_in_txt')) {
     {
         $newLog ='log_time:'.date('Y-m-d H:i:s').'       '.json_encode($data);
         file_put_contents("./log.txt", $newLog.PHP_EOL, FILE_APPEND);
+    }
+}
+
+if (!function_exists('open_file')) {
+    /**
+     * [file_open 打开文件处理]
+     * @param  [type] $url [路径]
+     * @return [type]      [description]
+     */
+    function open_file($url, $type=false)
+    {
+        if ($url) {
+            if (!stristr($url, 'http'))
+                $url = './'.trim(trim($url, '.'), '/');
+            if (stristr($url, 'http') && $type)
+                $url = parse_url($str)['path'];
+
+            $file = file_get_contents($url);
+            return $file;
+        } else {
+            return false;
+        }
     }
 }
 
