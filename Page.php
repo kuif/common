@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-20T15:06:21+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-02-20T17:16:49+08:00
+ * @Last Modified time: 2019-03-22T15:04:29+08:00
  */
 namespace feng;
 
@@ -230,16 +230,6 @@ class Page extends Paginator
                 color:#fff;
                 border: 1px #'.$color.' solid;
             }
-            .pagination p{
-                float:left;
-                margin:0px 10px 0px 0px;
-                padding:2px 12px;
-                font-size:12px;
-                height:24px;
-                line-height:24px;
-                color:#cccccc;
-                border:1px #cccccc solid;
-            }
             .pagination p:hover{
                 cursor: not-allowed;
             }
@@ -278,18 +268,18 @@ class Page extends Paginator
             height:40px;
             padding:20px 0px;
         }
-        .pagination a{
-            display:block;
-            float:left;
-            margin:0px 10px 0px 0px;
-            padding:2px 12px;
-            height:24px;
-            border:1px #cccccc solid;
-            background:#fff;
-            text-decoration:none;
+        .pagination a,.pagination p{
+            display: block;
+            margin: 0px 10px 0px 0px;
+            padding: 2px 12px;
+            border: 1px #cccccc solid;
+            background: #fff;
+            text-decoration: none;
             color:#'.$color.';
-            font-size:12px;
-            line-height:24px;
+            font-size: 12px;
+            line-height: 30px;
+            display: inline-block;
+            margin-left: 4px;
         }
         .pagination a:hover{
             color:#'.$color.';
