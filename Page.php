@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-20T15:06:21+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-03-22T15:04:29+08:00
+ * @Last Modified time: 2019-03-22T15:09:42+08:00
  */
 namespace feng;
 
@@ -265,8 +265,9 @@ class Page extends Paginator
             cursor:pointer
         }
         .pagination{
-            height:40px;
+            width: 100%;
             padding:20px 0px;
+            text-align: center;
         }
         .pagination a,.pagination p{
             display: block;
@@ -277,7 +278,7 @@ class Page extends Paginator
             text-decoration: none;
             color:#'.$color.';
             font-size: 12px;
-            line-height: 30px;
+            line-height: 27px;
             display: inline-block;
             margin-left: 4px;
         }
