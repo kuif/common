@@ -201,3 +201,53 @@ if (!function_exists('bank_info')) {
         return $result;
     }
 }
+
+if (!function_exists('get_html_data')) {
+    /**
+    * [get_html_data 使用xpath对获取到的html内容进行处理]
+    * @param  [type] $html  [HTML内容]
+    * @param  [type] $xpath [Xpath语句]
+    * @param  [type] $tag   [类型 0内容 1标签内容 自定义标签]
+    * @param  [type] $type  [单个 还是多个]
+    * @return [type]        [description]
+    */
+    public function get_html_data($html,$path,$tag=1)
+    {
+        $dom = new DOMDocument();
+        @$dom->loadHTML($html); // 从一个字符串加载HTML
+        $dom->normalize(); // 使该HTML规范化
+        $xpath = new DOMXPath($dom); //用DOMXpath加载DOM，用于查询
+        $contents = $xpath->query($path); // 获取所有内容
+        $data = [];
+        foreach ($contents as $value) {
+            if ($tag==1) {
+                $data[] = $value->nodeValue; // 获取不带标签内容
+            } elseif ($tag==2) {
+                $data[] = $dom->saveHtml($value);  // 获取带标签内容
+            } else {
+                $data[] = $value->attributes->getNamedItem($tag)->nodeValue; // 获取attr内容
+            }
+        }
+        if (count($data)==1) {
+            $data = $data[0];
+        }
+        return $data;
+    }
+}
+
+if (!function_exists('get_tag_data')) {
+   /**
+    * [get_tag_data 使用正则获取html内容]
+    * @param  [type] $html  [需要爬取的页面内容]
+    * @param  [type] $tag   [要查找的标签]
+    * @param  [type] $attr  [要查找的属性名]
+    * @param  [type] $value [属性名对应的值]
+    * @return [type]        [description]
+    */
+    public function get_tag_data($html,$tag,$attr,$value){
+        $regex = "/<$tag.*?$attr=\".*?$value.*?\".*?>(.*?)<\/$tag>/is";
+        preg_match_all($regex,$html,$matches,PREG_PATTERN_ORDER);
+        $data = isset($matches[1][0]) ? $matches[1][0] : '';
+        return $data;
+    }
+}
