@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-04-04T12:01:43+08:00
+ * @Last Modified time: 2019-04-05T10:59:18+08:00
  */
 if (!function_exists('result')) {
     /**
@@ -58,6 +58,64 @@ if (!function_exists('open_file')) {
         } else {
             return false;
         }
+    }
+}
+
+if (!function_exists('download_file')) {
+    /**
+     * [download_file 下载远程文件]
+     * @param  [type]  $url       [远程图片地址]
+     * @param  string  $save_path [保存路径（默认原始路径）]
+     * @param  string  $filename  [保存文件名称（默认原始文件名）]
+     * @param  integer $type      [使用的下载方式]
+     * @return [type]             [description]
+     */
+    function download_file($url,$save_path='',$filename='',$type=0){
+        if (!$url)
+            return array('msg'=>'图片缺失','file_name'=>'','save_path'=>'');
+        if (!$save_path) {
+            $save_path='.'.dirname(parse_url($url,PHP_URL_PATH));
+        } elseif ($save_path==1) {
+            $save_path='./';
+        } else {
+            $save_path = './'.trim(trim($save_path,'.'),'/');
+        }
+        if (!$filename) {
+            $filename = basename($url);
+        } elseif ($filename==1) {
+            $filename = time().rand(1000,9999).strrchr($url,'.');
+        } else {
+            $filename = $filename;
+        }
+        if(0!==strrpos($save_path,'/'))
+            $save_path.='/';
+        //创建保存目录
+        if(!file_exists($save_path)&&!mkdir($save_path,0777,true))
+            return array('msg'=>'创建目录失败','file_name'=>'','save_path'=>'');
+        if(file_exists($save_path.$filename))
+            return array('msg'=>'该文件已存在','file_name'=>'','save_path'=>'');
+        //获取远程文件所采用的方法
+        if($type){
+            $ch=curl_init();
+            $timeout=5;
+            curl_setopt($ch,CURLOPT_URL,$url);
+            curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
+            curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,$timeout);
+            $img=curl_exec($ch);
+            curl_close($ch);
+        }else{
+            ob_start();
+            readfile($url);
+            $img=ob_get_contents();
+            ob_end_clean();
+        }
+        //$size=strlen($img);
+        //文件大小
+        $fp2=@fopen($save_path.$filename,'a');
+        fwrite($fp2,$img);
+        fclose($fp2);
+        unset($img,$url);
+        return array('file_name'=>$filename,'save_path'=>$save_path.$filename);
     }
 }
 
@@ -250,7 +308,7 @@ if (!function_exists('get_html_data')) {
     * @param  [type] $type  [单个 还是多个]
     * @return [type]        [description]
     */
-    public function get_html_data($html,$path,$tag=1)
+    function get_html_data($html,$path,$tag=1)
     {
         $dom = new DOMDocument();
         @$dom->loadHTML($html); // 从一个字符串加载HTML
@@ -283,7 +341,7 @@ if (!function_exists('get_tag_data')) {
     * @param  [type] $value [属性名对应的值]
     * @return [type]        [description]
     */
-    public function get_tag_data($html,$tag,$attr,$value){
+    function get_tag_data($html,$tag,$attr,$value){
         $regex = "/<$tag.*?$attr=\".*?$value.*?\".*?>(.*?)<\/$tag>/is";
         preg_match_all($regex,$html,$matches,PREG_PATTERN_ORDER);
         $data = isset($matches[1][0]) ? $matches[1][0] : '';
