@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-04-05T10:59:18+08:00
+ * @Last Modified time: 2019-04-05T11:23:56+08:00
  */
 if (!function_exists('result')) {
     /**
@@ -311,7 +311,7 @@ if (!function_exists('get_html_data')) {
     function get_html_data($html,$path,$tag=1)
     {
         $dom = new DOMDocument();
-        @$dom->loadHTML($html); // 从一个字符串加载HTML
+        @$dom->loadHTML('<?xml encoding="UTF-8">' . $html); // 从一个字符串加载HTML
         $dom->normalize(); // 使该HTML规范化
         $xpath = new DOMXPath($dom); //用DOMXpath加载DOM，用于查询
         $contents = $xpath->query($path); // 获取所有内容
