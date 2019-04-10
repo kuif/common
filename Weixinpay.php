@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2018-12-15T16:47:40+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-03-17T14:01:27+08:00
+ * @Last Modified time: 2019-04-10T09:16:20+08:00
  */
 namespace feng;
 error_reporting(E_ALL);
@@ -16,20 +16,21 @@ class Weixinpay {
     // 定义配置项
     private $sslcert_path = './cert/apiclient_cert.pem'; // 证书（退款时使用）
     private $sslkey_path = './cert/apiclient_key.pem'; // 证书（退款时使用）
-    private $config=array(
+    private $config = array(
         'APPID'              => '', // 微信支付APPID
         'XCXAPPID'           => '', // 微信小程序APPID
         'MCHID'              => '', // 微信支付MCHID 商户收款账号
         'KEY'                => '', // 微信支付KEY
         'APPSECRET'          => '', // 公众帐号secert
-        'NOTIFY_URL'         => '', // 接收支付状态的连接  改成自己的域名
-        );
+        'NOTIFY_URL'         => '', // 接收支付状态的连接  改成自己的回调地址
+    );
 
-    // 构造函数
-    public function __construct(){
-        // 如果是在thinkphp中 那么需要补全/Application/Common/Conf/config.php中的配置
-        // 如果不是在thinkphp框架中使用；那么注释掉下面一行代码；直接补全 private $config 即可
-        // $this->config = C('WEIXINPAY_CONFIG');
+    /**
+     * [__construct 构造函数]
+     * @param [type] $config [传递微信支付相关配置]
+     */
+    public function __construct($config){
+        $config && $this->config = $config;
     }
 
     /**
@@ -45,11 +46,12 @@ class Weixinpay {
      *      'trade_type'    => '', // 类型：JSAPI--JSAPI支付（或小程序支付）、NATIVE--Native支付、APP--app支付，MWEB--H5支付
      * );
      */
-    public function unifiedOrder($order){
+    public function unifiedOrder($order)
+    {
         // 获取配置项
-        $weixinpay_config=$this->config;
+        $weixinpay_config = $this->config;
         $config=array(
-            'appid'             => (empty($weixinpay_config['APPID']) || $order['trade_type']=='JSAPI') ? $weixinpay_config['XCXAPPID'] : $weixinpay_config['APPID'],
+            'appid'             => (empty($weixinpay_config['APPID']) || $order['openid']) ? $weixinpay_config['XCXAPPID'] : $weixinpay_config['APPID'],
             'mch_id'            => $weixinpay_config['MCHID'],
             'nonce_str'         => 'test',
             'spbill_create_ip'  => self::getIP(),
@@ -133,7 +135,8 @@ class Weixinpay {
      * [notify 回调验证]
      * @return [array] [返回数组格式的notify数据]
      */
-    public function notify(){
+    public function notify()
+    {
         // 获取xml
         $xml = file_get_contents('php://input', 'r');
         // 转成php数组
@@ -164,7 +167,8 @@ class Weixinpay {
      * @param  [type] $data [description]
      * @return [type]       [description]
      */
-    public function toXml($data){
+    public function toXml($data)
+    {
         if(!is_array($data) || count($data) <= 0){
             throw new WxPayException("数组数据异常！");
         }
@@ -186,7 +190,8 @@ class Weixinpay {
      * @param  [type] $data [description]
      * @return [type]       [description]
      */
-    public function makeSign($data){
+    public function makeSign($data)
+    {
         // 去空
         $data = array_filter($data);
         //签名步骤一：按字典序排序参数
@@ -208,7 +213,8 @@ class Weixinpay {
      * @param  [type] $xml [xml字符串]
      * @return [type]      [转换得到的数组]
      */
-    public function toArray($xml){
+    public function toArray($xml)
+    {
         //禁止引用外部xml实体
         libxml_disable_entity_loader(true);
         $result = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
@@ -219,7 +225,8 @@ class Weixinpay {
      * [getParameters 获取jssdk需要用到的数据]
      * @return [array] [jssdk需要用到的数据]
      */
-    public function getParameters(){
+    public function getParameters()
+    {
         // 获取配置项
         $config = $this->config;
         // 如果没有get参数没有code；则重定向去获取openid；
@@ -276,7 +283,8 @@ class Weixinpay {
      * @param  [type] $order [description]
      * @return [type]        [description]
      */
-    public function pay($order){
+    public function pay($order)
+    {
         $result = self::unifiedOrder($order);
         $decodeurl = urldecode($result['code_url']);
         qrcode($decodeurl);
@@ -288,7 +296,8 @@ class Weixinpay {
      * @param  [type] $url [请求地址]
      * @return [type]      [description]
      */
-    public function curl_get_contents($url){
+    public function curl_get_contents($url)
+    {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);                //设置访问的url地址
         // curl_setopt($ch,CURLOPT_HEADER,1);               //是否显示头部信息

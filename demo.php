@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-03-17T14:06:26+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-03-17T15:25:38+08:00
+ * @Last Modified time: 2019-04-10T09:17:27+08:00
  */
 
 $order = array(
@@ -20,7 +20,7 @@ $config = array(
      'MCHID'        => '', // 微信支付MCHID 商户收款账号
      'KEY'          => '', // 微信支付KEY
      'APPSECRET'    => '', // 公众帐号secert
-     'NOTIFY_URL'   => '', // 接收支付状态的连接  改成自己的域名
+     'NOTIFY_URL'   => '', // 接收支付状态的连接  改成自己的回调地址
 );
 
 /**
@@ -37,7 +37,7 @@ public function weixinQr($pay_order)
         'product_id'    => '', // 产品id（可用订单编号）
         'trade_type'    => 'NATIVE', // Native支付
     );
-    $weixinpay = new \feng\Weixinpay();
+    $weixinpay = new \feng\Weixinpay($config); // 传入支付配置文件
     $result = $weixinpay->unifiedOrder($pay_order);
     $decodeurl = urldecode($result['code_url']);
     qrcode($decodeurl); // 使用二维码生成函数生成二维码图片
@@ -57,7 +57,7 @@ public function weixinH5($pay_order)
         'product_id'    => '', // 产品id（可用订单编号）
         'trade_type'    => 'MWEB', // Native支付
     );
-    $weixinpay = new \feng\Weixinpay();
+    $weixinpay = new \feng\Weixinpay($config); // 传入支付配置文件
     $result = $weixinpay->unifiedOrder($pay_order);
     if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS')
         return $result['mweb_url']; // 返回链接页面直接跳转
@@ -79,7 +79,7 @@ public function weixinXcx($pay_order)
         'product_id'    => '', // 产品id（可用订单编号）
         'openid'        => '', // 用户openid
     );
-    $weixinpay = new \feng\Weixinpay();
+    $weixinpay = new \feng\Weixinpay($config); // 传入支付配置文件
     $result = $weixinpay->unifiedOrder($pay_order);
     if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS') {
         $pay_return['wdata'] = array (
