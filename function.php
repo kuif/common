@@ -25,6 +25,44 @@ if (!function_exists('result')) {
     }
 }
 
+if (!function_exists('p')) {
+    /**
+     * [dump 浏览器友好的变量输出]
+     * @param  [type]  $var   [变量]
+     * @param  boolean $echo  [是否输出 默认为true 如果为false 则返回输出字符串]
+     * @param  [type]  $label [标签 默认为空]
+     * @param  [type]  $flags [htmlspecialchars flags]
+     * @return [type]         [description]
+     */
+    function p($var, $echo = true, $label = null, $flags = ENT_SUBSTITUTE)
+    {
+        $label = (null === $label) ? '' : rtrim($label) . ':';
+        if ($var instanceof Model || $var instanceof ModelCollection) {
+            $var = $var->toArray();
+        }
+
+        ob_start();
+        var_dump($var);
+
+        $output = ob_get_clean();
+        $output = preg_replace('/\]\=\>\n(\s+)/m', '] => ', $output);
+
+        if (PHP_SAPI == 'cli') {
+            $output = PHP_EOL . $label . $output . PHP_EOL;
+        } else {
+            if (!extension_loaded('xdebug')) {
+                $output = htmlspecialchars($output, $flags);
+            }
+            $output = '<pre>' . $label . $output . '</pre>';
+        }
+        if ($echo) {
+            echo($output);
+            return;
+        }
+        return $output;
+    }
+}
+
 /**    文件及文件夹处理      **/
 
 if (!function_exists('write_in_txt')) {
@@ -235,6 +273,50 @@ if (!function_exists('msubstr')) {
         $slice = join("", array_slice($match[0], $start, $length));
         if ($suffix) return $slice."…";
         return $slice;
+    }
+}
+
+if (!function_exists('unicode_encode')) {
+    /**
+     * [unicode_encode Unicode编码]
+     * @param  [type] $str      [原始字符串]
+     * @param  string $encoding [原始字符串的编码，默认GBK]
+     * @param  string $prefix   [编码后的前缀，默认"&#"]
+     * @param  string $postfix  [编码后的后缀，默认";"]
+     * @return [type]           [description]
+     */
+    function unicode_encode($str, $encoding = 'GBK', $prefix = '&#', $postfix = ';') {
+        $str = iconv($encoding, 'UCS-2', $str);
+        $arrstr = str_split($str, 2);
+        $unistr = '';
+        for($i = 0, $len = count($arrstr); $i < $len; $i++) {
+            $dec = hexdec(bin2hex($arrstr[$i]));
+            $unistr .= $prefix . $dec . $postfix;
+        }
+        return $unistr;
+    }
+}
+
+if (!function_exists('unicode_decode')) {
+    /**
+     * [unicode_decode Unicode解码]
+     * @param  [type] $unistr   [Unicode编码后的字符串]
+     * @param  string $encoding [原始字符串的编码，默认GBK]
+     * @param  string $prefix   [编码字符串的前缀，默认"&#"]
+     * @param  string $postfix  [编码字符串的后缀，默认";"]
+     * @return [type]           [description]
+     */
+    function unicode_decode($unistr, $encoding = 'GBK', $prefix = '&#', $postfix = ';') {
+        $arruni = explode($prefix, $unistr);
+        $unistr = '';
+        for($i = 1, $len = count($arruni); $i < $len; $i++) {
+            if (strlen($postfix) > 0) {
+                $arruni[$i] = substr($arruni[$i], 0, strlen($arruni[$i]) - strlen($postfix));
+            }
+            $temp = intval($arruni[$i]);
+            $unistr .= ($temp < 256) ? chr(0) . chr($temp) : chr($temp / 256) . chr($temp % 256);
+        }
+        return iconv('UCS-2', $encoding, $unistr);
     }
 }
 
