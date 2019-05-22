@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-04-05T11:23:56+08:00
+ * @Last Modified time: 2019-05-22T13:59:49+08:00
  */
 if (!function_exists('result')) {
     /**
@@ -345,7 +345,7 @@ if (!function_exists('bank_info')) {
 if (!function_exists('wxBizDataCrypt')) {
     /**
      * [wxBizDataCrypt 微信小程序，检验数据的真实性，并且获取解密后的明文.]
-     * @param  [type] $appid         [小程序openid]
+     * @param  [type] $appid         [小程序appid]
      * @param  [type] $sessionKey    [wx.login session_key]
      * @param  [type] $encryptedData [加密的用户数据]
      * @param  [type] $iv            [与用户数据一同返回的初始向量]

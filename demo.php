@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-03-17T14:06:26+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-04-10T09:17:27+08:00
+ * @Last Modified time: 2019-05-22T14:00:32+08:00
  */
 
 $order = array(
@@ -78,6 +78,7 @@ public function weixinXcx($pay_order)
         'out_trade_no'  => '', // 订单编号
         'product_id'    => '', // 产品id（可用订单编号）
         'openid'        => '', // 用户openid
+        'trade_type'    => 'JSAPI', // Native支付
     );
     $weixinpay = new \feng\Weixinpay($config); // 传入支付配置文件
     $result = $weixinpay->unifiedOrder($pay_order);
