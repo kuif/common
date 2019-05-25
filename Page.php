@@ -1,10 +1,12 @@
 <?php
 /**
  * @Author: [FENG] <1161634940@qq.com>
- * @Date:   2019-02-20T15:06:21+08:00
+ * @Date:   2019-05-24T15:36:30+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-03-22T15:09:42+08:00
+ * @Last Modified time: 2019-05-25T14:50:21+08:00
  */
+
+
 namespace feng;
 
 use think\Paginator;
@@ -24,7 +26,7 @@ class Page extends Paginator
     //上一页
     protected function prev() {
         if ($this->currentPage() > 1) {
-            return "<a href='" . $this->url($this->currentPage - 1) . "' title='上一页'>上一页</a>";
+            return "<a  class='prev'  href='" . $this->url($this->currentPage - 1) . "' title='上一页'>上一页</a>";
         } else {
             // return "<p>上一页</p>";
         }
@@ -216,41 +218,43 @@ class Page extends Paginator
     protected function css($color='077ee3'){
         if ($this->simple) {
             $css = '
+            .pagination .prev{
+                float: left;
+            }
             .pagination .next{
                 float: right;
             }
             .pagination a {
-              border-radius: 4px;
+                border-radius: 4px;
             }
             ';
         } else {
             $css = '
             .pagination a.cur{
-                background:#'.$color.';
-                color:#fff;
+                background: #'.$color.';
+                color: #fff;
                 border: 1px #'.$color.' solid;
             }
             .pagination p:hover{
                 cursor: not-allowed;
             }
             .pagination p.pageRemark{
-                border-style:none;
-                background:none;
-                margin-right:0px;
-                padding:4px 0px;
-                color:#666;
+                border-style: none;
+                background: none;
+                margin-right: 0px;
+                padding: 5px 0px;
+                color: #666;
             }
             .pagination p.pageRemark b{
-                color:red;
+                color: red;
             }
             .pagination p.pageEllipsis{
-                border-style:none;
-                background:none;
-                padding:4px 0px;
-                color:#808080;
+                border-style: none;
+                background: none;
+                // padding: 4px 0px;
+                color: #808080;
             }
             .pagination .first {
-              margin-left: 0;
               border-top-left-radius: 4px;
               border-bottom-left-radius: 4px;
             }
@@ -260,32 +264,31 @@ class Page extends Paginator
             }';
         }
         return '<style type="text/css">
-        .pagination p{
-            margin:0;
-            cursor:pointer
-        }
         .pagination{
+            font-size: 0px;
             width: 100%;
-            padding:20px 0px;
+            padding: 20px 0px;
             text-align: center;
         }
         .pagination a,.pagination p{
-            display: block;
-            margin: 0px 10px 0px 0px;
             padding: 2px 12px;
             border: 1px #cccccc solid;
             background: #fff;
             text-decoration: none;
-            color:#'.$color.';
+            color: #'.$color.';
             font-size: 12px;
             line-height: 27px;
             display: inline-block;
-            margin-left: 4px;
+            margin: 0px 5px 0px 5px;
+        }
+        .pagination p{
+            cursor: pointer;
+            color: #cccccc;
         }
         .pagination a:hover{
-            color:#'.$color.';
+            color: #'.$color.';
             background: #fff;
-            // border:1px #cccccc solid;
+            // border: 1px #cccccc solid;
             border: 1px #'.$color.' solid;
         }
         '.$css.'</style>';

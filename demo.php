@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-03-17T14:06:26+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-05-22T14:00:32+08:00
+ * @Last Modified time: 2019-05-22T14:08:02+08:00
  */
 
 $order = array(
@@ -11,7 +11,7 @@ $order = array(
     'total_fee'     => '', // 订单金额（分）
     'out_trade_no'  => '', // 订单编号
     'product_id'    => '', // 产品id（可用订单编号）
-    'trade_type'    => '', // 类型：JSAPI--JSAPI支付（公众号支付）、NATIVE--Native支付、APP--app支付，MWEB--H5支付
+    'trade_type'    => '', // 类型：JSAPI--JSAPI支付（或小程序支付）、NATIVE--Native支付、APP--app支付，MWEB--H5支付
 );
 
 $config = array(
@@ -55,7 +55,7 @@ public function weixinH5($pay_order)
         'total_fee'     => '', // 订单金额（分）
         'out_trade_no'  => '', // 订单编号
         'product_id'    => '', // 产品id（可用订单编号）
-        'trade_type'    => 'MWEB', // Native支付
+        'trade_type'    => 'MWEB', // H5支付
     );
     $weixinpay = new \feng\Weixinpay($config); // 传入支付配置文件
     $result = $weixinpay->unifiedOrder($pay_order);
@@ -78,7 +78,7 @@ public function weixinXcx($pay_order)
         'out_trade_no'  => '', // 订单编号
         'product_id'    => '', // 产品id（可用订单编号）
         'openid'        => '', // 用户openid
-        'trade_type'    => 'JSAPI', // Native支付
+        'trade_type'    => 'JSAPI', // 小程序支付
     );
     $weixinpay = new \feng\Weixinpay($config); // 传入支付配置文件
     $result = $weixinpay->unifiedOrder($pay_order);
