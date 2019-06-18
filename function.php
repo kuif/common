@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-05-22T13:59:49+08:00
+ * @Last Modified time: 2019-06-18 15:31:59
  */
 if (!function_exists('result')) {
     /**
@@ -273,6 +273,28 @@ if (!function_exists('msubstr')) {
         $slice = join("", array_slice($match[0], $start, $length));
         if ($suffix) return $slice."…";
         return $slice;
+    }
+}
+
+if (!function_exists('get_img')) {
+    /**
+     * [get_img 正则截取文本图片]
+     * @param  [type] $content [富文本]
+     * @param  string $order   [数量]
+     * @return [type]          [description]
+     */
+    function get_img($content,$order='ALL'){
+        $pattern="//";
+        preg_match_all($pattern,$content,$match);
+        if(isset($match[1])&&!empty($match[1])){
+            if($order==='ALL'){
+                return $match[1];
+            }
+            if(is_numeric($order)&&isset($match[1][$order])){
+                return $match[1][$order];
+            }
+        }
+        return '';
     }
 }
 
