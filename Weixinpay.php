@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-09-06 09:50:30
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-10-27 10:28:06
+ * @Last Modified time: 2019-10-27 16:19:40
  */
 namespace feng;
 error_reporting(E_ALL);
@@ -13,7 +13,7 @@ ini_set('display_errors', '1');
 ini_set('date.timezone','Asia/Shanghai');
 
 class Weixinpay {
-    // 定义配置项
+    // 定义相关配置项
     private $sslcert_path = './cert/apiclient_cert.pem'; // 证书（退款时使用）
     private $sslkey_path = './cert/apiclient_key.pem'; // 证书（退款时使用）
     private $referer = '';
@@ -59,10 +59,8 @@ class Weixinpay {
             'spbill_create_ip'  => self::get_iP(),
             'notify_url'        => $weixinpay_config['NOTIFY_URL']
         );
-        // 合并配置数据和订单数据
-        $data = array_merge($order, $config);
-        // 生成签名
-        $sign = self::makeSign($data);
+        $data = array_merge($order, $config); // 合并配置数据和订单数据
+        $sign = self::makeSign($data); // 生成签名
         $data['sign'] = $sign;
         $xml = self::array_to_xml($data);
         $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';//接收xml数据的文件
@@ -77,14 +75,12 @@ class Weixinpay {
         curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
         $response = curl_exec($ch);
         if(curl_errno($ch)){
-            // 显示报错信息；终止继续执行
-            die(curl_error($ch));
+            die(curl_error($ch)); // 显示报错信息；终止继续执行
         }
         curl_close($ch);
         $result = self::xml_to_array($response);
-        // 显示错误信息
         if ($result['return_code']=='FAIL') {
-            die($result['return_msg']);
+            die($result['return_msg']); // 显示错误信息
         }
         $result['sign'] = $sign;
         $result['nonce_str'] = 'test';
@@ -128,27 +124,27 @@ class Weixinpay {
      * );
      */
     public function jsPay($order=NULL,$code=NULL){
-        // 获取配置项
         $config=$this->config;
-        if(!is_array($order) || count($order) < 4){
+        if (!is_array($order) || count($order) < 4)
             die("数组数据信息缺失！");
-        }        
+        if (count($order) == 5) {
+            $data = self::xcxPay($order, false); // 获取支付相关信息(获取非小程序信息)
+            return $data;
+        }
+        empty($code) && $code = $_GET['code'];
         // 如果没有get参数没有code；则重定向去获取openid；
         if (empty($code)) {
             $out_trade_no = $order['out_trade_no']; // 获取订单号
             $redirect_uri = $config['REDIRECT_URI']; // 返回的url
             $redirect_uri = urlencode($redirect_uri);
             $url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid='.$config['APPID'].'&redirect_uri='.$redirect_uri.'&response_type=code&scope=snsapi_base&state='.$out_trade_no.'#wechat_redirect';
-            redirect($url);
+            header('Location: '.$url);
         } else {
             // 组合获取prepay_id的url
             $url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid='.$config['APPID'].'&secret='.$config['APPSECRET'].'&code='.$code.'&grant_type=authorization_code';
-            
             $result = self::curl_get_contents($url); // curl获取prepay_id
             $result = json_decode($result,true);
-            // 订单数据  请根据订单号out_trade_no 从数据库中查出实际的body、total_fee、out_trade_no、product_id
             $order['openid'] = $result['openid']; // 获取到的openid
-
             $data = self::xcxPay($order, false); // 获取支付相关信息(获取非小程序信息)
             return $data;
         }
@@ -176,7 +172,7 @@ class Weixinpay {
         $result = self::unifiedOrder($order,$type);
         if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS') {
             $data = array (
-                'appId'     => empty($type) ? $this->config['XCXAPPID'] : $this->config['APPID'],
+                'appId'     => $type ? $this->config['XCXAPPID'] : $this->config['APPID'],
                 'timeStamp' => time(),
                 'nonceStr'  => self::get_rand_str(32, 0, 1), // 随机32位字符串
                 'package'   => 'prepay_id='.$result['prepay_id'],
@@ -412,7 +408,6 @@ class Weixinpay {
             return false;
         }
     }
-
 
     /** fengkui.net
      * [get_rand_str 获取随机字符串]
