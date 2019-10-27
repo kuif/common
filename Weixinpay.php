@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-09-06 09:50:30
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-09-11 09:24:39
+ * @Last Modified time: 2019-10-27 10:28:06
  */
 namespace feng;
 error_reporting(E_ALL);
@@ -16,6 +16,7 @@ class Weixinpay {
     // 定义配置项
     private $sslcert_path = './cert/apiclient_cert.pem'; // 证书（退款时使用）
     private $sslkey_path = './cert/apiclient_key.pem'; // 证书（退款时使用）
+    private $referer = '';
     private $config = array(
         'APPID'              => '', // 微信支付APPID
         'XCXAPPID'           => '', // 微信小程序APPID
@@ -29,15 +30,16 @@ class Weixinpay {
      * [__construct 构造函数]
      * @param [type] $config [传递微信支付相关配置]
      */
-    public function __construct($config=NULL){
+    public function __construct($config=NULL, $referer=NULL){
         $config && $this->config = $config;
+        $this->referer = $referer ? $referer : $_SERVER['HTTP_HOST'];
     }
 
     /**
      * [unifiedOrder 统一下单]
-     * @param  [type] $order [订单信息（必须包含支付所需要的参数）]
-     * body(产品描述)、total_fee(订单金额)、out_trade_no(订单号)、product_id(产品id)、trade_type(类型：JSAPI，NATIVE，APP)
-     * @return [type]        [description]
+     * @param  [type]  $order [订单信息（必须包含支付所需要的参数）]
+     * @param  boolean $type  [区分是否是小程序，是则传 true]
+     * @return [type]         [description]
      * $order = array(
      *      'body'          => '', // 产品描述
      *      'total_fee'     => '', // 订单金额（分）
@@ -46,12 +48,12 @@ class Weixinpay {
      *      'trade_type'    => '', // 类型：JSAPI--JSAPI支付（或小程序支付）、NATIVE--Native支付、APP--app支付，MWEB--H5支付
      * );
      */
-    public function unifiedOrder($order)
+    public function unifiedOrder($order,$type=NULL)
     {
         $weixinpay_config = array_filter($this->config);
         // 获取配置项
-        $config=array(
-            'appid'             => !empty($order['openid']) ? $weixinpay_config['XCXAPPID'] : $weixinpay_config['APPID'],
+        $config = array(
+            'appid'             => empty($type) ? $weixinpay_config['APPID'] : $weixinpay_config['XCXAPPID'],
             'mch_id'            => $weixinpay_config['MCHID'],
             'nonce_str'         => 'test',
             'spbill_create_ip'  => self::get_iP(),
@@ -69,7 +71,7 @@ class Weixinpay {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 兼容本地没有指定curl.cainfo路径的错误
-        curl_setopt($ch, CURLOPT_REFERER,$_SERVER['HTTP_HOST']);        //设置 referer
+        curl_setopt($ch, CURLOPT_REFERER, $this->referer);        //设置 referer
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
@@ -115,9 +117,48 @@ class Weixinpay {
     }
 
     /**
-     * [xcxPay 微信小程序支付]
+     * [jsPay 获取jssdk需要用到的数据]
      * @param  [type] $order [订单信息数组]
      * @return [type]        [description]
+     * $order = array(
+     *      'body'          => '', // 产品描述
+     *      'total_fee'     => '', // 订单金额（分）
+     *      'out_trade_no'  => '', // 订单编号
+     *      'product_id'    => '', // 产品id（可用订单编号）
+     * );
+     */
+    public function jsPay($order=NULL,$code=NULL){
+        // 获取配置项
+        $config=$this->config;
+        if(!is_array($order) || count($order) < 4){
+            die("数组数据信息缺失！");
+        }        
+        // 如果没有get参数没有code；则重定向去获取openid；
+        if (empty($code)) {
+            $out_trade_no = $order['out_trade_no']; // 获取订单号
+            $redirect_uri = $config['REDIRECT_URI']; // 返回的url
+            $redirect_uri = urlencode($redirect_uri);
+            $url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid='.$config['APPID'].'&redirect_uri='.$redirect_uri.'&response_type=code&scope=snsapi_base&state='.$out_trade_no.'#wechat_redirect';
+            redirect($url);
+        } else {
+            // 组合获取prepay_id的url
+            $url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid='.$config['APPID'].'&secret='.$config['APPSECRET'].'&code='.$code.'&grant_type=authorization_code';
+            
+            $result = self::curl_get_contents($url); // curl获取prepay_id
+            $result = json_decode($result,true);
+            // 订单数据  请根据订单号out_trade_no 从数据库中查出实际的body、total_fee、out_trade_no、product_id
+            $order['openid'] = $result['openid']; // 获取到的openid
+
+            $data = self::xcxPay($order, false); // 获取支付相关信息(获取非小程序信息)
+            return $data;
+        }
+    }
+
+    /**
+     * [xcxPay 获取jssdk需要用到的数据]
+     * @param  [type]  $order [订单信息数组]
+     * @param  boolean $type  [区分是否是小程序，默认 true]
+     * @return [type]         [description]
      * $order = array(
      *      'body'          => '', // 产品描述
      *      'total_fee'     => '', // 订单金额（分）
@@ -126,26 +167,26 @@ class Weixinpay {
      *      'openid'        => '', // 用户openid
      * );
      */
-    public function xcxPay($order=NULL)
+    public function xcxPay($order=NULL,$type=true)
     {
         if(!is_array($order) || count($order) < 5){
             die("数组数据信息缺失！");
         }
         $order['trade_type'] = 'JSAPI'; // 小程序支付
-
-        $result = self::unifiedOrder($order);
+        $result = self::unifiedOrder($order,$type);
         if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS') {
-            $pay_return['wdata'] = array (
-                'appId'     => $this->config['XCXAPPID'],
+            $data = array (
+                'appId'     => empty($type) ? $this->config['XCXAPPID'] : $this->config['APPID'],
                 'timeStamp' => time(),
                 'nonceStr'  => self::get_rand_str(32, 0, 1), // 随机32位字符串
                 'package'   => 'prepay_id='.$result['prepay_id'],
                 'signType'  => 'MD5', // 加密方式
             );
-            $pay_return['wdata']['paySign'] = self::makeSign($pay_return['wdata']);
-            $pay_return['pay_money'] = $order['total_fee'];
-            return $pay_return; // JSON化后数据直接返回小程序客户端
+            $data['paySign'] = self::makeSign($data);
+            return $data; // 数据小程序客户端
         } else {
+            if ($result['err_code_des'])
+                die($result['err_code_des']);
             return false;
         }
     }
@@ -163,15 +204,16 @@ class Weixinpay {
      */
     public function h5Pay($order=NULL)
     {
-
         if(!is_array($order) || count($order) < 4){
             die("数组数据信息缺失！");
         }
         $order['trade_type'] = 'MWEB'; // H5支付
-
         $result = self::unifiedOrder($order);
+
         if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS')
             return $result['mweb_url']; // 返回链接让用户点击跳转
+        if ($result['err_code_des'])
+            die($result['err_code_des']);
         return false;
     }
 
@@ -271,62 +313,6 @@ class Weixinpay {
     }
 
     /**
-     * [getParameters 获取jssdk需要用到的数据]
-     * @return [array] [jssdk需要用到的数据]
-     */
-    public function getParameters()
-    {
-        // 获取配置项
-        $config = $this->config;
-        // 如果没有get参数没有code；则重定向去获取openid；
-        if (!isset($_GET['code'])) {
-            // 获取订单号
-            $out_trade_no = $_GET['out_trade_no'];
-            // 返回的url
-            $redirect_uri = '跳转地址';  // （需要根据自己的业务修改）
-            $redirect_uri = urlencode($redirect_uri);
-            $url='https://open.weixin.qq.com/connect/oauth2/authorize?appid='.$config['APPID'].'&redirect_uri='.$redirect_uri.'&response_type=code&scope=snsapi_base&state='.$out_trade_no.'#wechat_redirect';
-            header("location:$url");
-            // redirect($url);
-        }else{
-            // 如果有code参数；则表示获取到openid
-            $code = $_GET['code'];
-            // 取出订单号
-            $out_trade_no = $_GET['state'];
-            // 组合获取prepay_id的url
-            $url='https://api.weixin.qq.com/sns/oauth2/access_token?appid='.$config['APPID'].'&secret='.$config['APPSECRET'].'&code='.$code.'&grant_type=authorization_code';
-            // curl获取prepay_id
-            $result = self::curl_get_contents($url);
-            $result = json_decode($result,true);
-            $openid = $result['openid'];
-            // 订单数据  请根据订单号out_trade_no 从数据库中查出实际的body、total_fee、out_trade_no、product_id
-            $order = array(
-                'body'          => 'test', // 商品描述（需要根据自己的业务修改）
-                'total_fee'     => 1, // 订单金额  以(分)为单位（需要根据自己的业务修改）
-                'out_trade_no'  => $out_trade_no, // 订单号（需要根据自己的业务修改）
-                'product_id'    => '1', // 商品id（需要根据自己的业务修改）
-                'trade_type'    => 'JSAPI', // JSAPI公众号支付
-                'openid'        => $openid // 获取到的openid
-            );
-            // 统一下单 获取prepay_id
-            $unified_order=self::unifiedOrder($order);
-            // 获取当前时间戳
-            $time = time();
-            // 组合jssdk需要用到的数据
-            $data = array(
-                'appId'     => $config['APPID'], //appid
-                'timeStamp' => strval($time), //时间戳
-                'nonceStr'  => $unified_order['nonce_str'],// 随机字符串
-                'package'   => 'prepay_id='.$unified_order['prepay_id'],// 预支付交易会话标识
-                'signType'  => 'MD5'//加密方式
-            );
-            // 生成签名
-            $data['paySign'] = self::makeSign($data);
-            return $data;
-        }
-    }
-
-    /**
      * [xml_to_array 将xml转为array]
      * @param  [type] $xml [xml字符串]
      * @return [type]      [转换得到的数组]
@@ -373,7 +359,7 @@ class Weixinpay {
         // curl_setopt($ch,CURLOPT_HEADER,1);               //是否显示头部信息
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);               //设置超时
         curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);   //用户访问代理 User-Agent
-        curl_setopt($ch, CURLOPT_REFERER,$_SERVER['HTTP_HOST']);        //设置 referer
+        curl_setopt($ch, CURLOPT_REFERER, $this->referer);        //设置 referer
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);        //跟踪301
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);        //返回结果
         $r=curl_exec($ch);
@@ -437,20 +423,17 @@ class Weixinpay {
      */
     public function get_rand_str($randLength=6,$addtime=1,$includenumber=0)
     {
-        if ($includenumber){
+        if ($includenumber)
             $chars='abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQEST123456789';
-        }else {
-            $chars='abcdefghijklmnopqrstuvwxyz';
-        }
+        $chars='abcdefghijklmnopqrstuvwxyz';
+
         $len=strlen($chars);
         $randStr='';
         for ($i=0;$i<$randLength;$i++){
-            $randStr.=$chars[rand(0,$len-1)];
+            $randStr .= $chars[rand(0,$len-1)];
         }
-        $tokenvalue=$randStr;
-        if ($addtime){
-            $tokenvalue=$randStr.time();
-        }
+        $tokenvalue = $randStr;
+        $addtime && $tokenvalue=$randStr.time();
         return $tokenvalue;
     }
 
