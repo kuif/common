@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-09-06 09:50:30
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-10-27 16:19:40
+ * @Last Modified time: 2019-10-28 09:26:46
  */
 namespace feng;
 error_reporting(E_ALL);
@@ -173,7 +173,7 @@ class Weixinpay {
         if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS') {
             $data = array (
                 'appId'     => $type ? $this->config['XCXAPPID'] : $this->config['APPID'],
-                'timeStamp' => time(),
+                'timeStamp' => (string)time(),
                 'nonceStr'  => self::get_rand_str(32, 0, 1), // 随机32位字符串
                 'package'   => 'prepay_id='.$result['prepay_id'],
                 'signType'  => 'MD5', // 加密方式

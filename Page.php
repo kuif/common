@@ -3,10 +3,8 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-05-24T15:36:30+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-05-25T14:50:21+08:00
+ * @Last Modified time: 2019-10-28 10:23:13
  */
-
-
 namespace feng;
 
 use think\Paginator;
@@ -52,8 +50,7 @@ class Page extends Paginator
 
     //统计信息
     protected function info(){
-        return "<p class='pageRemark'>共<b>" . $this->lastPage .
-            "</b>页<b>" . $this->total . "</b>条数据</p>";
+        return "<p class='pageRemark'>共<b>" . $this->lastPage . "</b>页<b>" . $this->total . "</b>条数据</p>";
     }
 
     /**
@@ -69,7 +66,7 @@ class Page extends Paginator
             'last'   => null
         ];
 
-        $side   = 3;
+        $side   = 1;
         $window = $side * 2;
 
         if ($this->lastPage < $window + 6) {
@@ -111,6 +108,7 @@ class Page extends Paginator
      */
     public function render()
     {
+        // halt($this->info());
         if ($this->hasPages()) {
             if ($this->simple) {
                 return sprintf(
@@ -188,7 +186,6 @@ class Page extends Paginator
     protected function getUrlLinks(array $urls)
     {
         $html = '';
-
         foreach ($urls as $page => $url) {
             $html .= $this->getPageLinkWrapper($url, $page);
         }
@@ -218,79 +215,32 @@ class Page extends Paginator
     protected function css($color='077ee3'){
         if ($this->simple) {
             $css = '
-            .pagination .prev{
-                float: left;
-            }
-            .pagination .next{
-                float: right;
-            }
-            .pagination a {
-                border-radius: 4px;
-            }
+        .pagination .prev{ float: left; }
+        .pagination .next{ float: right; }
+        .pagination a { border-radius: 4px; }
             ';
         } else {
             $css = '
-            .pagination a.cur{
-                background: #'.$color.';
-                color: #fff;
-                border: 1px #'.$color.' solid;
-            }
-            .pagination p:hover{
-                cursor: not-allowed;
-            }
-            .pagination p.pageRemark{
-                border-style: none;
-                background: none;
-                margin-right: 0px;
-                padding: 5px 0px;
-                color: #666;
-            }
-            .pagination p.pageRemark b{
-                color: red;
-            }
-            .pagination p.pageEllipsis{
-                border-style: none;
-                background: none;
-                // padding: 4px 0px;
-                color: #808080;
-            }
-            .pagination .first {
-              border-top-left-radius: 4px;
-              border-bottom-left-radius: 4px;
-            }
-            .pagination .last {
-              border-top-right-radius: 4px;
-              border-bottom-right-radius: 4px;
-            }';
+        .pagination a.cur{ background: #'.$color.'; color: #fff; border: 1px #'.$color.' solid; }
+        .pagination p:hover{ cursor: not-allowed; }
+        .pagination p.pageRemark{ border-style: none; background: none; margin-right: 0px; padding: 5px 0px; color: #666; }
+        .pagination p.pageRemark b{ color: red; }
+        .pagination p.pageEllipsis{ border-style: none; background: none; /* padding: 4px 0px; */ color: #808080; }
+        .pagination .first { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+        .pagination .last { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+        @media screen and (max-width: 959px) {
+            .pagination .prev{ float: left; }
+            .pagination .next{ float: right; }
+            .pagination a { border-radius: 4px; }
+            .pagination a:not(.prev):not(.next),.pagination p{ display:none; }
+        }';
         }
         return '<style type="text/css">
-        .pagination{
-            font-size: 0px;
-            width: 100%;
-            padding: 20px 0px;
-            text-align: center;
-        }
-        .pagination a,.pagination p{
-            padding: 2px 12px;
-            border: 1px #cccccc solid;
-            background: #fff;
-            text-decoration: none;
-            color: #'.$color.';
-            font-size: 12px;
-            line-height: 27px;
-            display: inline-block;
-            margin: 0px 5px 0px 5px;
-        }
-        .pagination p{
-            cursor: pointer;
-            color: #cccccc;
-        }
-        .pagination a:hover{
-            color: #'.$color.';
-            background: #fff;
-            // border: 1px #cccccc solid;
-            border: 1px #'.$color.' solid;
-        }
-        '.$css.'</style>';
+        .pagination{ font-size: 0px; width: 100%; padding: 20px 0px; text-align: center; }
+        .pagination a,.pagination p{ padding: 2px 12px; border: 1px #cccccc solid; background: #fff; text-decoration: none; color: #'.$color.'; font-size: 12px; line-height: 27px; display: inline-block; margin: 0px 5px 0px 5px; }
+        .pagination p{ cursor: pointer; color: #cccccc; }
+        .pagination a:hover{ color: #'.$color.'; background: #fff; /* border: 1px #cccccc solid; */ border: 1px #'.$color.' solid; }
+        '.$css.'
+        </style>';
     }
 }
