@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-09-06 09:50:30
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-10-28 09:26:46
+ * @Last Modified time: 2019-10-28 13:00:05
  */
 namespace feng;
 error_reporting(E_ALL);
@@ -48,7 +48,7 @@ class Weixinpay {
      *      'trade_type'    => '', // 类型：JSAPI--JSAPI支付（或小程序支付）、NATIVE--Native支付、APP--app支付，MWEB--H5支付
      * );
      */
-    public function unifiedOrder($order,$type=NULL)
+    public function unifiedOrder($order, $type=NULL)
     {
         $weixinpay_config = array_filter($this->config);
         // 获取配置项
@@ -79,9 +79,11 @@ class Weixinpay {
         }
         curl_close($ch);
         $result = self::xml_to_array($response);
-        if ($result['return_code']=='FAIL') {
+        if ($result['return_code']=='FAIL')
             die($result['return_msg']); // 显示错误信息
-        }
+        if ($result['result_code']=='FAIL')
+            die($result['err_code_des']); // 显示错误信息
+
         $result['sign'] = $sign;
         $result['nonce_str'] = 'test';
         return $result;
@@ -104,7 +106,6 @@ class Weixinpay {
             die("数组数据信息缺失！");
         }
         $order['trade_type'] = 'NATIVE'; // Native支付
-
         $result = self::unifiedOrder($order);
         $decodeurl = urldecode($result['code_url']);
         return $decodeurl;
@@ -216,7 +217,7 @@ class Weixinpay {
     /**
      * [Refund 微信支付退款]
      * @param  [type] $order [订单信息]
-     * @return [type]        [description]
+     * @param  [type] $type  [是否是小程序]
      * $order = array(
      *      'body'          => '', // 退款原因
      *      'total_fee'     => '', // 商品价格（分）
@@ -224,11 +225,11 @@ class Weixinpay {
      *      'transaction_id'=> '', // 微信订单号
      * );
      */
-    public function Refund($order)
+    public function Refund($order, $type=NULL)
     {
         $config = $this->config;
         $data = array(
-            'appid'         => $config['APPID'] ? $config['APPID'] : $config['XCXAPPID'] ,
+            'appid'         => empty($type) ? $config['APPID'] : $config['XCXAPPID'] ,
             'mch_id'        => $config['MCHID'],
             'nonce_str'     => 'test',
             'total_fee'     => $order['total_fee'],         //订单金额     单位 转为分
