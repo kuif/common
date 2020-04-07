@@ -682,7 +682,7 @@ function build_count_rand ($number,$length=4,$mode=1)
 }
 
 /**
- * [num_letter 十进制转二十六进制（excel使用）]
+ * [num_letter 十进制转二十六进制(基数为A-Z)]
  * @param  [type] $num [十进制数字]
  * @return [type]      [description]
  */
