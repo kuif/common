@@ -681,6 +681,25 @@ function build_count_rand ($number,$length=4,$mode=1)
     return $rand;
 }
 
+/**
+ * [num_letter 十进制转二十六进制（excel使用）]
+ * @param  [type] $num [十进制数字]
+ * @return [type]      [description]
+ */
+function num_letter($num) {
+    $num = intval($num);
+    if ($num <= 0)
+        return false;
+    $letterArr = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+    $letter = '';
+    do {
+        $key = ($num - 1) % 26;
+        $letter = $letterArr[$key] . $letter;
+        $num = floor(($num - $key) / 26);
+    } while ($num > 0);
+    return $letter;
+}
+
 /** fengkui.net
  * [get_rand_str 获取随机字符串]
  * @param  integer $randLength    [长度]
