@@ -19,7 +19,7 @@ var time = {
         } else {
             //将日期转换成时间戳
             re = /(\d{4})(?:\D?(\d{1,2})(?:\D?(\d{1,2}))?[^\d\s]?)?(?:\s+(\d{1,2})\D?(\d{1,2})\D?(\d{1,2}))?/.exec(date);
-            timeStr = Math.round(new Date(re[1], (re[2] || 1) - 1, re[3] || 1, re[4] || 0, re[5] || 0, re[6] || 0).getTime() / 1000);
+            timeStr = !re ? 0 : Math.round(new Date(re[1], (re[2] || 1) - 1, re[3] || 1, re[4] || 0, re[5] || 0, re[6] || 0).getTime() / 1000);
             return timeStr;
         }
 
