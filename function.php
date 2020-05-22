@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-06-18 17:13:38
+ * @Last Modified time: 2020-05-22 17:26:01
  */
 if (!function_exists('result')) {
     /**
@@ -103,35 +103,37 @@ if (!function_exists('download_file')) {
     /**
      * [download_file 下载远程文件]
      * @param  [type]  $url       [远程图片地址]
-     * @param  string  $save_path [保存路径（默认原始路径）]
-     * @param  string  $filename  [保存文件名称（默认原始文件名）]
-     * @param  integer $type      [使用的下载方式]
+     * @param  string  $save_path [保存路径（默认原始路径1当前目录）]
+     * @param  string  $filename  [保存文件名称（默认原始文件名1随机）]
+     * @param  boolean $replace   [是否同名覆盖]
+     * @param  boolean $type      [使用的下载方式]
      * @return [type]             [description]
      */
-    function download_file($url,$save_path='',$filename='',$type=0){
+    function download_file($url,$save_path='',$filename='',$replace=true,$type=false){
         if (!$url)
             return array('msg'=>'图片缺失','file_name'=>'','save_path'=>'');
-        if (!$save_path) {
+        if (!$save_path)
             $save_path='.'.dirname(parse_url($url,PHP_URL_PATH));
-        } elseif ($save_path==1) {
-            $save_path='./';
-        } else {
+            if ($save_path==1)
+                $save_path='./';
             $save_path = './'.trim(trim($save_path,'.'),'/');
-        }
-        if (!$filename) {
+
+        if (!$filename)
             $filename = basename($url);
-        } elseif ($filename==1) {
-            $filename = time().rand(1000,9999).strrchr($url,'.');
-        } else {
+            if ($filename==1)
+                $filename = time().rand(1000,9999).strrchr($url,'.');
             $filename = $filename;
-        }
+
         if(0!==strrpos($save_path,'/'))
             $save_path.='/';
         //创建保存目录
         if(!file_exists($save_path)&&!mkdir($save_path,0777,true))
             return array('msg'=>'创建目录失败','file_name'=>'','save_path'=>'');
         if(file_exists($save_path.$filename))
-            return array('msg'=>'该文件已存在','file_name'=>'','save_path'=>'');
+            if (!$replace)
+                return array('msg'=>'该文件已存在','file_name'=>'','save_path'=>'');
+            @unlink($save_path.$filename);
+
         //获取远程文件所采用的方法
         if($type){
             $ch=curl_init();
