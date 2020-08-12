@@ -3,9 +3,8 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2020-08-10 09:23:35
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2020-08-10 16:25:31
+ * @Last Modified time: 2020-08-10 17:42:55
  */
-
 namespace feng;
 
 /**
@@ -30,9 +29,11 @@ class imgcompress
     {
         $this->_openImage($url);
         $this->_thumpImage($percent);
-        if(!empty($saveName))
+        if(!empty($saveName)) {
             $this->_saveImage($url, $saveName);  //保存
-        $this->_showImage();
+        } else {
+            $url != $saveName && $this->_showImage();
+        }
     }
 
     /**
@@ -111,6 +112,6 @@ class imgcompress
      * 销毁图片
      */
     public function __destruct(){
-        imagedestroy($this->image);
+        $this->image && imagedestroy($this->image);
     }
 }

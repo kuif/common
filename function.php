@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2020-05-22 17:26:01
+ * @Last Modified time: 2020-08-12 16:34:39
  */
 if (!function_exists('result')) {
     /**
@@ -112,20 +112,14 @@ if (!function_exists('download_file')) {
     function download_file($url,$save_path='',$filename='',$replace=true,$type=false){
         if (!$url)
             return array('msg'=>'图片缺失','file_name'=>'','save_path'=>'');
-        if (!$save_path)
-            $save_path='.'.dirname(parse_url($url,PHP_URL_PATH));
-            if ($save_path==1)
-                $save_path='./';
-            $save_path = './'.trim(trim($save_path,'.'),'/');
 
-        if (!$filename)
-            $filename = basename($url);
-            if ($filename==1)
-                $filename = time().rand(1000,9999).strrchr($url,'.');
-            $filename = $filename;
+        if (empty($save_path) || $save_path == 1)
+            $save_path = $save_path==1 ? './' : dirname(parse_url($url,PHP_URL_PATH));
 
-        if(0!==strrpos($save_path,'/'))
-            $save_path.='/';
+        if (empty($filename) || !strrchr($filename, '.'))
+            $filename = empty($filename) ? basename($url) : (($filename===1 ? time().rand(1000,9999) : $filename).strrchr($url,'.'));
+
+        (substr($save_path, -1) != '/') && $save_path .= '/';
         //创建保存目录
         if(!file_exists($save_path)&&!mkdir($save_path,0777,true))
             return array('msg'=>'创建目录失败','file_name'=>'','save_path'=>'');
@@ -135,6 +129,7 @@ if (!function_exists('download_file')) {
             @unlink($save_path.$filename);
 
         //获取远程文件所采用的方法
+        $url = iconv("utf-8", "gbk", $url);
         if($type){
             $ch=curl_init();
             $timeout=5;
