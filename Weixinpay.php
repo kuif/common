@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-09-06 09:50:30
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2020-08-10 11:26:20
+ * @Last Modified time: 2020-10-08T11:10:44+08:00
  */
 namespace feng;
 error_reporting(E_ALL);
@@ -12,22 +12,19 @@ ini_set('display_errors', '1');
 // 定义时区
 ini_set('date.timezone','Asia/Shanghai');
 
-/**
- * 微信支付相关类
- */
-class Weixinpay
-{
+class WeixinPay {
     // 定义相关配置项
     private $sslcert_path = './cert/apiclient_cert.pem'; // 证书（退款时使用）
     private $sslkey_path = './cert/apiclient_key.pem'; // 证书（退款时使用）
     private $referer = '';
     private $config = array(
-        'APPID'              => '', // 微信支付APPID
-        'XCXAPPID'           => '', // 微信小程序APPID
-        'MCHID'              => '', // 微信支付MCHID 商户收款账号
-        'KEY'                => '', // 微信支付KEY
-        'APPSECRET'          => '', // 公众帐号secert(公众号支付专用)
-        'NOTIFY_URL'         => '', // 接收支付状态的连接  改成自己的回调地址
+        'appid'         => '', // 微信支付appid
+        'xcxappid'      => '', // 微信小程序appid
+        'mch_id'        => '', // 微信支付 mch_id 商户收款账号
+        'key'           => '', // 微信支付key
+        'appsecret'     => '', // 公众帐号secert(公众号支付专用)
+        'notify_url'    => '', // 接收支付状态的连接  改成自己的回调地址
+        'redirect_uri'  => '', // 公众号支付时，没有code，获取openid使用
     );
 
     /**
@@ -57,16 +54,16 @@ class Weixinpay
         $weixinpay_config = array_filter($this->config);
         // 获取配置项
         $config = array(
-            'appid'             => empty($type) ? $weixinpay_config['APPID'] : $weixinpay_config['XCXAPPID'],
-            'mch_id'            => $weixinpay_config['MCHID'],
+            'appid'             => empty($type) ? $weixinpay_config['appid'] : $weixinpay_config['xcxappid'],
+            'mch_id'            => $weixinpay_config['mch_id'],
             'nonce_str'         => 'test',
             'spbill_create_ip'  => self::get_iP(),
-            'notify_url'        => $weixinpay_config['NOTIFY_URL']
+            'notify_url'        => $weixinpay_config['notify_url']
         );
         $data = array_merge($order, $config); // 合并配置数据和订单数据
         $sign = self::makeSign($data); // 生成签名
         $data['sign'] = $sign;
-        $xml = self::arrayToXml($data);
+        $xml = self::array_to_xml($data);
         $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';//接收xml数据的文件
         $header[] = "Content-type: text/xml";//定义content-type为xml,注意是数组
         $ch = curl_init ($url);
@@ -82,7 +79,7 @@ class Weixinpay
             die(curl_error($ch)); // 显示报错信息；终止继续执行
         }
         curl_close($ch);
-        $result = self::xmlToArray($response);
+        $result = self::xml_to_array($response);
         if ($result['return_code']=='FAIL')
             die($result['return_msg']); // 显示错误信息
         if ($result['result_code']=='FAIL')
@@ -140,14 +137,14 @@ class Weixinpay
         // 如果没有get参数没有code；则重定向去获取openid；
         if (empty($code)) {
             $out_trade_no = $order['out_trade_no']; // 获取订单号
-            $redirect_uri = $config['REDIRECT_URI']; // 返回的url
+            $redirect_uri = $config['redirect_uri']; // 返回的url
             $redirect_uri = urlencode($redirect_uri);
-            $url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid='.$config['APPID'].'&redirect_uri='.$redirect_uri.'&response_type=code&scope=snsapi_base&state='.$out_trade_no.'#wechat_redirect';
+            $url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid='.$config['appid'].'&redirect_uri='.$redirect_uri.'&response_type=code&scope=snsapi_base&state='.$out_trade_no.'#wechat_redirect';
             header('Location: '.$url);
         } else {
             // 组合获取prepay_id的url
-            $url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid='.$config['APPID'].'&secret='.$config['APPSECRET'].'&code='.$code.'&grant_type=authorization_code';
-            $result = self::getCurl($url); // curl获取prepay_id
+            $url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid='.$config['appid'].'&secret='.$config['appsecret'].'&code='.$code.'&grant_type=authorization_code';
+            $result = self::curl_get_contents($url); // curl获取prepay_id
             $result = json_decode($result,true);
             $order['openid'] = $result['openid']; // 获取到的openid
             $data = self::xcxPay($order, false); // 获取支付相关信息(获取非小程序信息)
@@ -177,7 +174,7 @@ class Weixinpay
         $result = self::unifiedOrder($order,$type);
         if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS') {
             $data = array (
-                'appId'     => $type ? $this->config['XCXAPPID'] : $this->config['APPID'],
+                'appId'     => $type ? $this->config['xcxappid'] : $this->config['appid'],
                 'timeStamp' => (string)time(),
                 'nonceStr'  => self::get_rand_str(32, 0, 1), // 随机32位字符串
                 'package'   => 'prepay_id='.$result['prepay_id'],
@@ -219,7 +216,7 @@ class Weixinpay
     }
 
     /**
-     * [refund 微信支付退款]
+     * [Refund 微信支付退款]
      * @param  [type] $order [订单信息]
      * @param  [type] $type  [是否是小程序]
      * $order = array(
@@ -229,12 +226,12 @@ class Weixinpay
      *      'transaction_id'=> '', // 微信订单号
      * );
      */
-    public function refund($order, $type=NULL)
+    public function Refund($order, $type=NULL)
     {
         $config = $this->config;
         $data = array(
-            'appid'         => empty($type) ? $config['APPID'] : $config['XCXAPPID'] ,
-            'mch_id'        => $config['MCHID'],
+            'appid'         => empty($type) ? $config['appid'] : $config['xcxappid'] ,
+            'mch_id'        => $config['mch_id'],
             'nonce_str'     => 'test',
             'total_fee'     => $order['total_fee'],         //订单金额     单位 转为分
             'refund_fee'    => $order['total_fee'],         //退款金额 单位 转为分
@@ -247,10 +244,10 @@ class Weixinpay
         // $unified['sign'] = self::makeSign($unified, $config['KEY']);
         $sign = self::makeSign($data);
         $data['sign'] = $sign;
-        $xml = self::arrayToXml($data);
+        $xml = self::array_to_xml($data);
         $url = 'https://api.mch.weixin.qq.com/secapi/pay/refund';//接收xml数据的文件
         $response = self::postXmlSSLCurl($xml,$url);
-        $result = self::xmlToArray($response);
+        $result = self::xml_to_array($response);
         // 显示错误信息
         if ($result['return_code']=='FAIL') {
             die($result['return_msg']);
@@ -269,7 +266,7 @@ class Weixinpay
         $xml = file_get_contents('php://input', 'r'); // 获取xml
         if (!$xml)
             die('暂无回调信息');
-        $data = self::xmlToArray($xml); // 转成php数组
+        $data = self::xml_to_array($xml); // 转成php数组
         $data_sign = $data['sign']; // 保存原sign
         unset($data['sign']); // sign不参与签名
         $sign = self::makeSign($data);
@@ -303,9 +300,9 @@ class Weixinpay
         ksort($data);
         $string_a = http_build_query($data);
         $string_a = urldecode($string_a);
-        //签名步骤二：在string后加入KEY
+        //签名步骤二：在string后加入key
         $config = $this->config;
-        $string_sign_temp = $string_a."&key=".$config['KEY'];
+        $string_sign_temp = $string_a."&key=".$config['key'];
         //签名步骤三：MD5加密
         $sign = md5($string_sign_temp);
         // 签名步骤四：所有字符转为大写
@@ -314,11 +311,11 @@ class Weixinpay
     }
 
     /**
-     * [xmlToArray 将xml转为array]
+     * [xml_to_array 将xml转为array]
      * @param  [type] $xml [xml字符串]
      * @return [type]      [转换得到的数组]
      */
-    public function xmlToArray($xml)
+    public function xml_to_array($xml)
     {
         //禁止引用外部xml实体
         libxml_disable_entity_loader(true);
@@ -327,11 +324,11 @@ class Weixinpay
     }
 
     /**
-     * [arrayToXml 输出xml字符]
+     * [array_to_xml 输出xml字符]
      * @param  [type] $data [description]
      * @return [type]       [description]
      */
-    public function arrayToXml($data)
+    public function array_to_xml($data)
     {
         if(!is_array($data) || count($data) <= 0){
             die("数组数据异常！");
@@ -349,11 +346,11 @@ class Weixinpay
     }
 
     /**
-     * [getCurl get请求]
+     * [curl_get_contents get请求]
      * @param  [type] $url [请求地址]
      * @return [type]      [description]
      */
-    public function getCurl($url)
+    public function curl_get_contents($url)
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);                //设置访问的url地址
