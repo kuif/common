@@ -3,21 +3,22 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-09-06 09:50:30
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2020-10-08T11:10:44+08:00
+ * @Last Modified time: 2020-10-14T16:46:32+08:00
  */
-namespace feng;
+namespace feng\Pay;
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
 // 定义时区
 ini_set('date.timezone','Asia/Shanghai');
 
-class WeixinPay {
+class Weixin
+{
     // 定义相关配置项
-    private $sslcert_path = './cert/apiclient_cert.pem'; // 证书（退款时使用）
-    private $sslkey_path = './cert/apiclient_key.pem'; // 证书（退款时使用）
-    private $referer = '';
-    private $config = array(
+    private static $sslcert_path = './cert/apiclient_cert.pem'; // 证书（退款时使用）
+    private static $sslkey_path = './cert/apiclient_key.pem'; // 证书（退款时使用）
+    private static $referer = '';
+    private static $config = array(
         'appid'         => '', // 微信支付appid
         'xcxappid'      => '', // 微信小程序appid
         'mch_id'        => '', // 微信支付 mch_id 商户收款账号
@@ -32,8 +33,8 @@ class WeixinPay {
      * @param [type] $config [传递微信支付相关配置]
      */
     public function __construct($config=NULL, $referer=NULL){
-        $config && $this->config = $config;
-        $this->referer = $referer ? $referer : $_SERVER['HTTP_HOST'];
+        $config && self::$config = $config;
+        self::$referer = $referer ? $referer : $_SERVER['HTTP_HOST'];
     }
 
     /**
@@ -49,9 +50,9 @@ class WeixinPay {
      *      'trade_type'    => '', // 类型：JSAPI--JSAPI支付（或小程序支付）、NATIVE--Native支付、APP--app支付，MWEB--H5支付
      * );
      */
-    public function unifiedOrder($order, $type=NULL)
+    public static function unifiedOrder($order, $type=NULL)
     {
-        $weixinpay_config = array_filter($this->config);
+        $weixinpay_config = array_filter(self::$config);
         // 获取配置项
         $config = array(
             'appid'             => empty($type) ? $weixinpay_config['appid'] : $weixinpay_config['xcxappid'],
@@ -70,7 +71,7 @@ class WeixinPay {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 兼容本地没有指定curl.cainfo路径的错误
-        curl_setopt($ch, CURLOPT_REFERER, $this->referer);        //设置 referer
+        curl_setopt($ch, CURLOPT_REFERER, self::$referer);        //设置 referer
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
@@ -101,7 +102,7 @@ class WeixinPay {
      *      'product_id'    => '', // 产品id（可用订单编号）
      * );
      */
-    public function qrcodePay($order=NULL)
+    public static function qrcodePay($order=NULL)
     {
         if(!is_array($order) || count($order) < 4){
             die("数组数据信息缺失！");
@@ -125,8 +126,8 @@ class WeixinPay {
      *      'product_id'    => '', // 产品id（可用订单编号）
      * );
      */
-    public function jsPay($order=NULL,$code=NULL){
-        $config=$this->config;
+    public static function jsPay($order=NULL,$code=NULL){
+        $config=self::$config;
         if (!is_array($order) || count($order) < 4)
             die("数组数据信息缺失！");
         if (count($order) == 5) {
@@ -165,7 +166,7 @@ class WeixinPay {
      *      'openid'        => '', // 用户openid
      * );
      */
-    public function xcxPay($order=NULL,$type=true)
+    public static function xcxPay($order=NULL,$type=true)
     {
         if(!is_array($order) || count($order) < 5){
             die("数组数据信息缺失！");
@@ -174,7 +175,7 @@ class WeixinPay {
         $result = self::unifiedOrder($order,$type);
         if ($result['return_code']=='SUCCESS' && $result['result_code']=='SUCCESS') {
             $data = array (
-                'appId'     => $type ? $this->config['xcxappid'] : $this->config['appid'],
+                'appId'     => $type ? self::$config['xcxappid'] : self::$config['appid'],
                 'timeStamp' => (string)time(),
                 'nonceStr'  => self::get_rand_str(32, 0, 1), // 随机32位字符串
                 'package'   => 'prepay_id='.$result['prepay_id'],
@@ -200,7 +201,7 @@ class WeixinPay {
      *      'product_id'    => '', // 产品id（可用订单编号）
      * );
      */
-    public function h5Pay($order=NULL)
+    public static function h5Pay($order=NULL)
     {
         if(!is_array($order) || count($order) < 4){
             die("数组数据信息缺失！");
@@ -216,19 +217,19 @@ class WeixinPay {
     }
 
     /**
-     * [Refund 微信支付退款]
+     * [refund 微信支付退款]
      * @param  [type] $order [订单信息]
      * @param  [type] $type  [是否是小程序]
      * $order = array(
      *      'body'          => '', // 退款原因
-     *      'total_fee'     => '', // 商品价格（分）
+     *      'total_fee'     => '', // 退款金额（分）
      *      'out_trade_no'  => '', // 订单编号
      *      'transaction_id'=> '', // 微信订单号
      * );
      */
-    public function Refund($order, $type=NULL)
+    public static function refund($order, $type=NULL)
     {
-        $config = $this->config;
+        $config = self::$config;
         $data = array(
             'appid'         => empty($type) ? $config['appid'] : $config['xcxappid'] ,
             'mch_id'        => $config['mch_id'],
@@ -261,7 +262,7 @@ class WeixinPay {
      * [notify 回调验证]
      * @return [array] [返回数组格式的notify数据]
      */
-    public function notify()
+    public static function notify()
     {
         $xml = file_get_contents('php://input', 'r'); // 获取xml
         if (!$xml)
@@ -272,18 +273,28 @@ class WeixinPay {
         $sign = self::makeSign($data);
         // 判断签名是否正确  判断支付状态
         if ($sign===$data_sign && $data['return_code']=='SUCCESS' && $data['result_code']=='SUCCESS') {
-            $result=$data;
-        }else{
-            $result=false;
+            return $data;
+        } else {
+            return false;
         }
-        // 返回状态给微信服务器
-        if ($result) {
-            $str='<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
-        }else{
-            $str='<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名失败]]></return_msg></xml>';
-        }
-        echo $str;
-        return $result;
+    }
+
+    /**
+     * [success 通知支付状态]
+     */
+    public static function success()
+    {
+        $str = '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+        die($str);
+    }
+
+    /**
+     * [error 通知支付状态]
+     */
+    public static function error()
+    {
+        $str = '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名失败]]></return_msg></xml>';
+        die($str);
     }
 
     /**
@@ -292,7 +303,7 @@ class WeixinPay {
      * @param  [type] $data [description]
      * @return [type]       [description]
      */
-    public function makeSign($data)
+    public static function makeSign($data)
     {
         // 去空
         $data = array_filter($data);
@@ -301,7 +312,7 @@ class WeixinPay {
         $string_a = http_build_query($data);
         $string_a = urldecode($string_a);
         //签名步骤二：在string后加入key
-        $config = $this->config;
+        $config = self::$config;
         $string_sign_temp = $string_a."&key=".$config['key'];
         //签名步骤三：MD5加密
         $sign = md5($string_sign_temp);
@@ -315,7 +326,7 @@ class WeixinPay {
      * @param  [type] $xml [xml字符串]
      * @return [type]      [转换得到的数组]
      */
-    public function xml_to_array($xml)
+    public static function xml_to_array($xml)
     {
         //禁止引用外部xml实体
         libxml_disable_entity_loader(true);
@@ -328,7 +339,7 @@ class WeixinPay {
      * @param  [type] $data [description]
      * @return [type]       [description]
      */
-    public function array_to_xml($data)
+    public static function array_to_xml($data)
     {
         if(!is_array($data) || count($data) <= 0){
             die("数组数据异常！");
@@ -350,14 +361,14 @@ class WeixinPay {
      * @param  [type] $url [请求地址]
      * @return [type]      [description]
      */
-    public function curl_get_contents($url)
+    public static function curl_get_contents($url)
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);                //设置访问的url地址
         // curl_setopt($ch,CURLOPT_HEADER,1);               //是否显示头部信息
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);               //设置超时
         curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);   //用户访问代理 User-Agent
-        curl_setopt($ch, CURLOPT_REFERER, $this->referer);        //设置 referer
+        curl_setopt($ch, CURLOPT_REFERER, self::$referer);        //设置 referer
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);        //跟踪301
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);        //返回结果
         $r=curl_exec($ch);
@@ -372,7 +383,7 @@ class WeixinPay {
      * @param  integer $second [description]
      * @return [type]          [description]
      */
-    public function postXmlSSLCurl($xml,$url,$second=30)
+    public static function postXmlSSLCurl($xml,$url,$second=30)
     {
         $ch = curl_init();
         //超时时间
@@ -391,10 +402,10 @@ class WeixinPay {
         //使用证书：cert 与 key 分别属于两个.pem文件
         //默认格式为PEM，可以注释
         curl_setopt($ch,CURLOPT_SSLCERTTYPE,'PEM');
-        curl_setopt($ch,CURLOPT_SSLCERT, $this->sslcert_path);
+        curl_setopt($ch,CURLOPT_SSLCERT, self::$sslcert_path);
         //默认格式为PEM，可以注释
         curl_setopt($ch,CURLOPT_SSLKEYTYPE,'PEM');
-        curl_setopt($ch,CURLOPT_SSLKEY, $this->sslkey_path);
+        curl_setopt($ch,CURLOPT_SSLKEY, self::$sslkey_path);
         //post提交方式
         curl_setopt($ch,CURLOPT_POST, true);
         curl_setopt($ch,CURLOPT_POSTFIELDS,$xml);
@@ -418,7 +429,7 @@ class WeixinPay {
      * @param  integer $includenumber [是否包含数字]
      * @return [type]                 [description]
      */
-    public function get_rand_str($randLength=6,$addtime=1,$includenumber=0)
+    public static function get_rand_str($randLength=6,$addtime=1,$includenumber=0)
     {
         if ($includenumber)
             $chars='abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQEST123456789';
@@ -438,7 +449,7 @@ class WeixinPay {
      * [get_iP 定义一个函数get_iP() 客户端IP]
      * @return [type] [description]
      */
-    public function get_iP()
+    public static function get_iP()
     {
         if (getenv("HTTP_CLIENT_IP"))
             $ip = getenv("HTTP_CLIENT_IP");
