@@ -3,8 +3,10 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-05-24T15:36:30+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2019-10-28 10:23:13
+ * @Last Modified time: 2020-12-25 17:38:21
  */
+
+
 namespace feng;
 
 use think\Paginator;
@@ -71,10 +73,10 @@ class Page extends Paginator
 
         if ($this->lastPage < $window + 6) {
             $block['first'] = $this->getUrlRange(1, $this->lastPage);
-        } elseif ($this->currentPage <= $window) {
+        } elseif ($this->currentPage <= $window || $this->currentPage - $side == 2) {
             $block['first'] = $this->getUrlRange(1, $window + 2);
             $block['last']  = $this->getUrlRange($this->lastPage - 1, $this->lastPage);
-        } elseif ($this->currentPage > ($this->lastPage - $window)) {
+        } elseif ($this->currentPage > ($this->lastPage - $window) || $this->currentPage + $side == $this->lastPage - 1) {
             $block['first'] = $this->getUrlRange(1, 2);
             $block['last']  = $this->getUrlRange($this->lastPage - ($window + 2), $this->lastPage);
         } else {
