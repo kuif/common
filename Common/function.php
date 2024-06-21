@@ -3,7 +3,7 @@
  * @Author: [FENG] <1161634940@qq.com>
  * @Date:   2019-02-21T09:58:42+08:00
  * @Last Modified by:   [FENG] <1161634940@qq.com>
- * @Last Modified time: 2020-10-08T16:58:47+08:00
+ * @Last Modified time: 2021-03-18T10:39:17+08:00
  */
 if (!function_exists('result')) {
     /**
@@ -12,15 +12,41 @@ if (!function_exists('result')) {
      * @param  string $data [具体数据]
      * @return [type]       [description]
      */
-    function result($code,$data=false)
+    // function result($code,$data=false)
+    // {
+    //     if (empty($data) || $data===true) {
+    //         $result = array('data'=>$code ?: '$data数据为空');
+    //     } else {
+    //         $result = array('data'=>false, 'code'=>$code, 'err'=>$data);
+    //     }
+    //     return $result;
+    // }
+
+    function result($code, $msg=true, $data=false)
     {
-        if (empty($data) || $data===true) {
-            $result = array('data'=>$code ?: '$data数据为空');
+        // dump(is_array($code));die;
+        if (is_array($code) || $msg === true) {
+            $result = array('data'=>$code);
+            // dump(11111111);
         } else {
-            $result = array('data'=>false, 'code'=>$code, 'err'=>$data);
+            $result = array('code'=>$code, 'err'=>$msg, 'data'=>$data);
+            // dump(22222222);
         }
         return $result;
-        die;
+    }
+}
+
+if (!function_exists('msg')) {
+    /**
+     * [result 返回状态数组]
+     * @param  [type] $code [错误码]
+     * @param  string $data [具体数据]
+     * @return [type]       [description]
+     */
+    function msg($code, $msg='操作成功', $data='')
+    {
+        $result = array('code'=>$code, 'msg'=>$msg, 'data'=>$data, 'time'=>time());
+        return $result;
     }
 }
 
@@ -71,8 +97,10 @@ if (!function_exists('write_in_txt')) {
      */
     function write_in_txt($data)
     {
-        $newLog ='log_time:'.date('Y-m-d H:i:s').'       '.json_encode($data);
-        file_put_contents("./log.txt", $newLog.PHP_EOL, FILE_APPEND);
+        $data = is_array($data) ? json_encode($data, JSON_UNESCAPED_UNICODE) : $data;
+        $newLog ='log_time:'.date('Y-m-d H:i:s').'       '.$data;
+        file_put_contents("../runtime/log.txt", $newLog.PHP_EOL, FILE_APPEND);
+        return true;
     }
 }
 
@@ -117,11 +145,10 @@ if (!function_exists('download_file')) {
                 $save_path='./';
             $save_path = './'.trim(trim($save_path,'.'),'/');
 
-        if (!$filename)
+        if (!$filename) {
             $filename = basename($url);
-            if ($filename==1)
-                $filename = time().rand(1000,9999).strrchr($url,'.');
-            $filename = $filename;
+            $filename == 1 && $filename = time().rand(1000,9999).strrchr($url,'.');
+        }
 
         if(0!==strrpos($save_path,'/'))
             $save_path.='/';
@@ -227,7 +254,7 @@ if (!function_exists('image_url')) {
         if (empty($url)) {
             return $url;
         }
-        $images = strstr($url,',') ? explode(',',$url) : [$url];
+        $images = is_array($url) ? $url : explode(',',$url);
         foreach ($images as $k => $v) {
             $v = trim($v, '.');
             $images[$k] = strstr($v, 'http') ? $v : SITE_URL.$v;
@@ -293,31 +320,30 @@ if (!function_exists('msubstr')) {
     /** fengkui.net
      * [msubstr 截取的字符串]
      * @param  [type]  $str     [要截取的字符串]
-     * @param  integer $start   [开始位置，默认从0开始]
      * @param  [type]  $length  [截取长度]
+     * @param  integer $start   [开始位置，默认从0开始]
      * @param  string  $charset [字符编码，默认UTF－8]
      * @param  boolean $suffix  [是否在截取后的字符后面显示省略号，默认true显示，false为不显示]
      * @return [type]           [description]
      */
     //模版使用：{$vo.title|msubstr=0,5,'utf-8',false}
-    function msubstr($str, $start = 0, $length, $charset = "utf-8", $suffix = true)
+    function msubstr($str,  $length, $start = 0, $charset = "utf-8", $suffix = true)
     {
         if (function_exists("mb_substr")) {
             if ($suffix) return mb_substr($str, $start, $length, $charset)."...";
             else return mb_substr($str, $start, $length, $charset);
-        }
-        elseif(function_exists('iconv_substr')) {
+        } elseif (function_exists('iconv_substr')) {
             if ($suffix) return iconv_substr($str, $start, $length, $charset)."...";
             else return iconv_substr($str, $start, $length, $charset);
         }
-        $re['utf-8'] = "/[x01-x7f]|[xc2-xdf][x80-xbf]|[xe0-xef]
-                      [x80-xbf]{2}|[xf0-xff][x80-xbf]{3}/";
+        $re['utf-8'] = "/[x01-x7f]|[xc2-xdf][x80-xbf]|[xe0-xef][x80-xbf]{2}|[xf0-xff][x80-xbf]{3}/";
         $re['gb2312'] = "/[x01-x7f]|[xb0-xf7][xa0-xfe]/";
         $re['gbk'] = "/[x01-x7f]|[x81-xfe][x40-xfe]/";
         $re['big5'] = "/[x01-x7f]|[x81-xfe]([x40-x7e]|xa1-xfe])/";
         preg_match_all($re[$charset], $str, $match);
         $slice = join("", array_slice($match[0], $start, $length));
-        if ($suffix) return $slice."…";
+        if ($suffix)
+            return $slice."…";
         return $slice;
     }
 }
@@ -431,43 +457,21 @@ if (!function_exists('combine_array')) {
     }
 }
 
-if (!function_exists('wxBizDataCrypt')) {
-    /**
-     * [wxBizDataCrypt 微信小程序，检验数据的真实性，并且获取解密后的明文.]
-     * @param  [type] $appid         [小程序appid]
-     * @param  [type] $sessionKey    [wx.login session_key]
-     * @param  [type] $encryptedData [加密的用户数据]
-     * @param  [type] $iv            [与用户数据一同返回的初始向量]
-     * @return [type]                [description]
-     */
-    function wxBizDataCrypt($appid, $sessionKey, $encryptedData, $iv )
-    {
-        if (strlen($sessionKey) != 24) { // -41001
+if (!function_exists('num_letter')) {
+    // 公共文件，十进制转二十六进制(基数为A-Z)
+    function num_letter($num) {
+        $num = intval($num);
+        if ($num <= 0)
             return false;
-        }
-        $aesKey=base64_decode($sessionKey);
-
-        if (strlen($iv) != 24) { // -41002
-            return false;
-        }
-        $aesIV=base64_decode($iv);
-
-        $aesCipher=base64_decode($encryptedData);
-
-        $result=openssl_decrypt( $aesCipher, "AES-128-CBC", $aesKey, 1, $aesIV);
-
-        $dataObj=json_decode( $result );
-        if( $dataObj  == NULL ) // -41003
-        {
-            return false;
-        }
-        if( $dataObj->watermark->appid != $appid ) // -41003
-        {
-            return false;
-        }
-        return $result;
+        $letterArr = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+        $letter = '';
+        do {
+            $key = ($num - 1) % 26;
+            $letter = $letterArr[$key] . $letter;
+            $num = floor(($num - $key) / 26);
+        } while ($num > 0);
+        return $letter;
     }
-
 }
 
 if (!function_exists('get_html_data')) {
@@ -517,5 +521,36 @@ if (!function_exists('get_tag_data')) {
         preg_match_all($regex,$html,$matches,PREG_PATTERN_ORDER);
         $data = isset($matches[1][0]) ? $matches[1][0] : '';
         return $data;
+    }
+}
+
+if (!function_exists('chn_discount')) {
+    /**
+     * [chn_discount 数字转中文折扣]
+     * @param  [type] $num [description]
+     * @return [type]      [description]
+     */
+    function chn_discount($num)
+    {
+        $num <= 1 && $num = $num*100;
+        if ($num >= 100)
+            return '';
+        $chnnum = '';
+        $datacn = array('零','一','二','三','四','五','六','七','八','九');
+        $num = abs($num);
+        $numstr = strval($num);
+        $alen = strlen($numstr);
+        $pos = $alen - 1;
+        for ($i = 0; $i < $alen; $i++) {
+            $curidx = intval($numstr[$i]);
+            if ($curidx > 0) {
+                $chnnum .= $datacn[$curidx];
+            } else if (!$lastunit) {
+                $chnnum .= $datacn[$curidx];
+            }
+            $pos--;
+        }
+        $chnnum || $chnnum .= '零';
+        return $chnnum . '折';
     }
 }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script src="jquery-1.8.3.min.js"></script>
+	<script>
+		$(function(){
+		})
+	</script>
+</head>
+<body>
+	<div>
+		<ul>
+			<li><a id="first" href="http://www.baidu.com">百度</a></li>
+			<li><a href="http://www.jd.com">京东</a></li>
+			<li><a href="http://www.taobao.com" id="taobao">淘宝</a></li>
+			<li>
+				<ol>
+					<li class="test"><a href="http://www.youku.com">优酷</a></li>
+					<li class="test"><a href="http://www.tmall.com">天猫</a></li>
+					<li class="test"><a href="http://www.nuomi.com">糯米</a></li>
+				</ol>
+			</li>
+		</ul>
+	</div>
+	<p>用jquery的选择器配合筛选最少以10中方式找到内容为糯米的a链接并弹出内容糯米</p>
+</body>
+<script>
+	// var a = $('a:last').html();
+	// var a = $('a:eq(5)').html();
+	// var a = $('a:gt(4)').html();
+	// var a = $('a:not(:lt(5))').html();
+	// var a = $('a:contains(糯米)').html();
+	// var a = $('a[href="http:\/\/www.nuomi.com"]').html();
+	// var a = $('a[href*="nuomi"]').html();
+	// var a = $('a[href*="u"]:last').html();
+
+	// var a = $('li:last a').html(); 
+	// var a = $('li:last>a').html();
+	// var a = $('li:eq(6)>a').html();
+	// var a = $('li:eq(5)+li>a').html();
+	// var a = $('li:eq(5)~li>a').html();
+	// var a = $('li:gt(5)>a').html();
+	// var a = $('li:gt(4)+li>a').html();
+	// var a = $('li:gt(4)~li>a').html();
+	// var a = $('li:not(:lt(6))>a').html();
+	// var a = $('li[class="test"]:last>a').html();
+	// var a = $('li[class*="test"]:last>a').html();
+	// var a = $('li:eq(2)').next().find('ol li:last a').html();
+	// var a = $('li:eq(5)').parent().find('.test:last a').html();
+	// var a = $('li:first').parent().find('ol').find('.test:last a').html();
+	// var a = $('li:first').parent().find('ol .test:last a').html();
+
+	// var a = $('.test:last>a').html();
+	// var a = $('.test:eq(2)>a').html();
+	// var a = $('.test:eq(1)+li>a').html();
+	// var a = $('.test:eq(1)~li>a').html();
+	// var a = $('.test:gt(1)>a').html();
+	// var a = $('.test:gt(0)+li>a').html();
+	// var a = $('.test:gt(0)~li>a').html();
+	// var a = $('.test:not(:lt(2))>a').html();
+	// var a = $('.test:first').parent().find('li:last a').html();
+	// var a = $('.test:eq(1)').nextAll().find('a').html();
+	// var a = $('.test:eq(1)').next().find('a').html();
+
+	// var a = $('ol>li:last>a').html();
+	// var a = $('ol:first-child>li:last>a').html();
+	// var a = $('ol:last-child>li:last>a').html();
+	// var a = $('ol:only-child>li:last>a').html();
+
+	// var a = $('#first').parent().parent().find('ol').find('.test:last a').html();
+	// var a = $('#first').parent().parent().find('li:last a').html();
+	// var a = $('#first').parent().parent().find('ol li:last a').html();
+	// var a = $('#first').parent().siblings().find('li:last a').html();
+
+	// var a = $('div').find('ul li ol li:last a').html();
+	// var a = $('div').find('li:last a').html();
+	// var a = $('div').find('a:last').html();
+	// var a = $('div').children().find('li:last a').html();
+
+	alert(a);
+</script>
+</html>
