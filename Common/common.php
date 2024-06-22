@@ -467,7 +467,7 @@ function combineArray($arr1,$arr2)
  * @param  [type] $array [数组]
  * @return [type]        [description]
  */
-function in_array($str,$array)
+function in_array1($str,$array)
 {
     $str=strtolower($str);
     $array=array_map('strtolower', $array);
@@ -1209,28 +1209,28 @@ function down_file($file_path)
  * @param  [type] $dir [目录]
  * @return [type]      [description]
  */
-function get_dir($dir)
-{
-    $fileArr = array();
-    $dirArr = array();
-    $dir = rtrim($dir, '//');
-    if(is_dir($dir)){
-        $dirHandle = opendir($dir);
-        while(false !== ($fileName = readdir($dirHandle))){
-            $subFile = $dir . DIRECTORY_SEPARATOR . $fileName;
-            if(is_file($subFile)){
-                $fileArr[] = $subFile;
-            } elseif (is_dir($subFile) && str_replace('.', '', $fileName)!=''){
-                $dirArr[] = $subFile;
-                $arr = self::deepScanDir($subFile);
-                $dirArr = array_merge($dirArr, $arr['dir']);
-                $fileArr = array_merge($fileArr, $arr['file']);
-            }
-        }
-        closedir($dirHandle);
-    }
-    return array('dir'=>$dirArr, 'file'=>$fileArr);
-}
+// function get_dir($dir)
+// {
+//     $fileArr = array();
+//     $dirArr = array();
+//     $dir = rtrim($dir, '//');
+//     if(is_dir($dir)){
+//         $dirHandle = opendir($dir);
+//         while(false !== ($fileName = readdir($dirHandle))){
+//             $subFile = $dir . DIRECTORY_SEPARATOR . $fileName;
+//             if(is_file($subFile)){
+//                 $fileArr[] = $subFile;
+//             } elseif (is_dir($subFile) && str_replace('.', '', $fileName)!=''){
+//                 $dirArr[] = $subFile;
+//                 $arr = self::deepScanDir($subFile);
+//                 $dirArr = array_merge($dirArr, $arr['dir']);
+//                 $fileArr = array_merge($fileArr, $arr['file']);
+//             }
+//         }
+//         closedir($dirHandle);
+//     }
+//     return array('dir'=>$dirArr, 'file'=>$fileArr);
+// }
 
 /** fengkui.net
  * [get_dir_files 取得输入目录所包含的所有文件]
@@ -1249,7 +1249,7 @@ function get_dir_files($dir)
             if ($filename=='.' || $filename=='..') { continue; }
             $filetype = filetype($dir.$ds.$filename);
             if ($filetype == 'dir') {
-                $files = array_merge($files, self::get_dir_files($dir.$ds.$filename));
+                $files = array_merge($files, get_dir_files($dir.$ds.$filename));
             } elseif ($filetype == 'file') {
                 $files[] = $dir.$ds.$filename;
             }
@@ -1285,7 +1285,7 @@ function create_file($filename) {
  * @param  [type]  $file [文件/目录]
  * @return boolean       [description]
  */
-function is_writeable($file) 
+function is_writeable1($file) 
 {
     if (is_dir($file)){
         $dir = $file;
